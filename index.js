@@ -256,7 +256,7 @@ async function autoRunMultiAPI() {
                 if (lockTime > nowTime) {
                     const remainingSeconds = Math.ceil((lockTime - nowTime) / 1000);
                     if (lockTime < nearestUnlockTime) nearestUnlockTime = lockTime;
-                    console.log(`  ${Fmt.red}ʟᴏᴄᴋᴇᴅ [${steamProfile.username}] suspended. ${Math.ceil(remainingSeconds / 60)} mins.${Fmt.reset}`);
+                    console.log(`  ${Fmt.red}ʟᴏᴄᴋᴇᴅ [${steamProfile.username}] ѕᴜѕᴘᴇɴᴅᴇᴅ. ${Math.ceil(remainingSeconds / 60)} ᴍɪɴѕ.${Fmt.reset}`);
                     continue;
                 }
 
