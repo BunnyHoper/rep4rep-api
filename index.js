@@ -33,7 +33,6 @@ function initializeSchema() {
             token text,
             last_comment text
         )`);
-        // Persistent database memory for independent 1-hour account lockouts
         db.run(`CREATE TABLE IF NOT EXISTS account_locks (
             steamId text PRIMARY KEY,
             lock_until text
@@ -53,17 +52,17 @@ function renderBox(title, content, color = Fmt.cyan) {
     console.log(`└${border}┘${Fmt.reset}`);
 }
 
-function displayHeader(subtitle = 'Dashboard') {
+function displayHeader(subtitle = 'ᴅᴀsʜʙᴏᴀʀᴅ') {
     console.log('\x1Bc');
-    console.log(`${Fmt.bold}${Fmt.bgMagenta}${Fmt.white}  BUNNY COMMUNITY MODULE 🚀  ${Fmt.reset} ${Fmt.dim}v${version}${Fmt.reset}`);
-    console.log(`${Fmt.dim} Current Context: ${Fmt.reset}${Fmt.italic}${Fmt.magenta}${subtitle}${Fmt.reset}\n`);
+    console.log(`${Fmt.bold}${Fmt.bgMagenta}${Fmt.white}  📂 ʀᴇᴘ х ʀᴇᴘ ᴀᴘɪ  ${Fmt.reset} ${Fmt.dim}v${version}${Fmt.reset}`);
+    console.log(`${Fmt.dim} ᴄᴜʀʀᴇɴᴛ ᴄᴏɴᴛᴇxᴛ: ${Fmt.reset}${Fmt.italic}${Fmt.magenta}${subtitle}${Fmt.reset}\n`);
 }
 
-async function countdown(seconds, prefix = "⏳ COOLDOWN") {
+async function countdown(seconds, prefix = "⏳ ᴄᴏᴏʟᴅᴏᴡɴ") {
     while (seconds > 0) {
         const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
         const secs = (seconds % 60).toString().padStart(2, '0');
-        process.stdout.write(`\r     ${Fmt.bold}${Fmt.yellow}${prefix}: Next sync cycle ready in [${mins}:${secs}]${Fmt.reset} `);
+        process.stdout.write(`\r     ${Fmt.bold}${Fmt.yellow}${prefix}: ɴᴇxᴛ sʏɴᴄ ᴄʏᴄʟᴇ ʀᴇᴀᴅʏ ɪɴ [${mins}:${secs}]${Fmt.reset} `);
         await new Promise(r => setTimeout(r, 1000));
         seconds--;
     }
@@ -71,40 +70,40 @@ async function countdown(seconds, prefix = "⏳ COOLDOWN") {
 }
 
 async function homeMenu(notification = false) {
-    displayHeader('Main Core');
-    if (notification) console.log(` ${Fmt.bgBlue}${Fmt.white}${Fmt.bold} INFO ${Fmt.reset} ${Fmt.cyan}${notification}${Fmt.reset}\n`);
+    displayHeader('ᴍᴀɪɴ ᴄᴏʀᴇ');
+    if (notification) console.log(` ${Fmt.bgBlue}${Fmt.white}${Fmt.bold} ɴᴏᴛᴇ ${Fmt.reset} ${Fmt.cyan}${notification}${Fmt.reset}\n`);
 
-    console.log(`  ${Fmt.magenta}1.│${Fmt.reset} ${Fmt.bold}Run Multi-Account API Pipeline (Continuous Automated Loop)${Fmt.reset}`);
-    console.log(`  ${Fmt.magenta}2.│${Fmt.reset} ${Fmt.bold}Manage Steam Accounts Vault${Fmt.reset} ${Fmt.gray}(Add/Remove Cuentas)${Fmt.reset}`);
-    console.log('\n  ' + Fmt.gray + 'Press CTRL + C to exit.' + Fmt.reset + '\n');
+    console.log(`  ${Fmt.magenta}1.│${Fmt.reset} ${Fmt.bold}ʀᴜɴ ᴍᴜʟᴛɪ-ᴀᴄᴄᴏᴜɴᴛ ᴀᴘɪ ᴘɪᴘᴇʟɪɴᴇ (ᴄᴏɴᴛɪɴᴜᴏᴜs ᴀᴜᴛᴏᴍᴀᴛᴇᴅ ʟᴏᴏᴘ)${Fmt.reset}`);
+    console.log(`  ${Fmt.magenta}2.│${Fmt.reset} ${Fmt.bold}ᴍᴀɴᴀɢᴇ sᴛᴇᴀᴍ ᴀᴄᴄᴏᴜɴᴛs ᴠᴀᴜʟᴛ ${Fmt.gray}(ᴀᴅadd/ his/ᴅᴇʟᴇᴛᴇ ᴀᴄᴄᴏᴜɴᴛs)${Fmt.reset}`);
+    console.log('\n  ' + Fmt.gray + 'ᴘʀᴇss ᴄᴛʀʟ + ᴄ ᴛᴏ ᴇxɪᴛ.' + Fmt.reset + '\n');
 
-    const decision = await ask(`${Fmt.bold}${Fmt.magenta}>> Select Path: ${Fmt.reset}`);
+    const decision = await ask(`${Fmt.bold}${Fmt.magenta}>> sᴇʟᴇᴄᴛ ᴘᴀᴛʜ: ${Fmt.reset}`);
     if (decision === '1') return autoRunMultiAPI();
     if (decision === '2') return profilesMenu();
     homeMenu();
 }
 
 async function profilesMenu(notification = false) {
-    displayHeader('Accounts Vault');
-    if (notification) console.log(` ${Fmt.bgBlue}${Fmt.white}${Fmt.bold} STATE ${Fmt.reset} ${Fmt.yellow}${notification}${Fmt.reset}\n`);
+    displayHeader('ᴀᴄᴄᴏᴜɴᴛs ᴠᴀᴜʟᴛ');
+    if (notification) console.log(` ${Fmt.bgBlue}${Fmt.white}${Fmt.bold} sᴛᴀᴛᴇ ${Fmt.reset} ${Fmt.yellow}${notification}${Fmt.reset}\n`);
 
     try {
         const rows = await db_all('SELECT id, username, steamId, last_comment FROM steamprofiles');
         if (rows.length > 0) {
-            console.log(`${Fmt.bold}${Fmt.cyan} Local Registered Accounts:${Fmt.reset}`);
+            console.log(`${Fmt.bold}${Fmt.cyan} ʀᴇɢɪsᴛᴇʀᴇᴅ ᴀᴄᴄᴏᴜɴᴛs:${Fmt.reset}`);
             console.table(rows);
         } else {
-            console.log(`  ${Fmt.gray}[ Storage empty. No accounts linked yet ]${Fmt.reset}\n`);
+            console.log(`  ${Fmt.gray}[ sᴛᴏʀᴀɢᴇ ᴇᴍᴘᴛʏ. ɴᴏ ᴀᴄᴄᴏᴜɴᴛs ʟɪɴᴋᴇᴅ ʏᴇᴛ ]${Fmt.reset}\n`);
         }
     } catch (e) {
-        console.log(`  ${Fmt.red}❌ Error parsing DB profiles.${Fmt.reset}`);
+        console.log(`  ${Fmt.red}❌ ᴇʀʀᴏʀ ʀᴇᴀᴅɪɴɢ ᴅᴀᴛᴀʙᴀsᴇ.${Fmt.reset}`);
     }
 
-    console.log(`  ${Fmt.cyan}1.│${Fmt.reset} Link New Steam Account via Incognito Browser Window`);
-    console.log(`  ${Fmt.cyan}2.│${Fmt.reset} Delete an account record`);
-    console.log(`  ${Fmt.gray}3.│ Rollback to main menu${Fmt.reset}\n`);
+    console.log(`  ${Fmt.cyan}1.│${Fmt.reset} ʟɪɴᴋ ɴᴇᴡ sᴛᴇᴀᴍ ᴀᴄᴄᴏᴜɴᴛ ᴠɪᴀ ɪɴᴄᴏɢɴɪᴛᴏ ʙʀᴏᴡsᴇʀ ᴡɪɴᴅᴏᴡ`);
+    console.log(`  ${Fmt.cyan}2.│${Fmt.reset} ᴅᴇʟᴇᴛᴇ ᴀɴ ᴀᴄᴄᴏᴜɴᴛ ʀᴇᴄᴏʀᴅ`);
+    console.log(`  ${Fmt.gray}3.│ ʀᴏʟʟʙᴀᴄᴋ ᴛᴏ ᴍᴀɪɴ ᴍᴇɴᴜ${Fmt.reset}\n`);
 
-    const decision = await ask(`${Fmt.bold}${Fmt.cyan}>> Select Option: ${Fmt.reset}`);
+    const decision = await ask(`${Fmt.bold}${Fmt.cyan}>> sᴇʟᴇᴄᴛ ᴏᴘᴛɪᴏɴ: ${Fmt.reset}`);
     if (decision === '1') return addAccountViaBrowserWindow();
     if (decision === '2') return removeSteamAccount();
     if (decision === '3') return homeMenu();
@@ -112,15 +111,15 @@ async function profilesMenu(notification = false) {
 }
 
 async function addAccountViaBrowserWindow() {
-    displayHeader('Link Account via Browser');
-    renderBox("Multi-Account Registration", 
-        "1. A clean browser window will open in Incognito mode.\n" +
-        "2. Log into the Steam account you want to save (User/Pass/SteamGuard/QR).\n" +
-        "3. Once successfully logged in, the script captures the cookies automatically.", 
+    displayHeader('ʟɪɴᴋ ᴀᴄᴄᴏᴜɴᴛ ᴠɪᴀ ʙʀᴏᴡsᴇʀ');
+    renderBox("ᴍᴜʟᴛɪ-ᴀᴄᴄᴏᴜɴᴛ ʀᴇɢɪsᴛʀᴀᴛɪᴏɴ", 
+        "1. ᴀ ᴄʟᴇᴀɴ ʙʀᴏᴡsᴇʀ ᴡɪɴᴅᴏᴡ ᴡɪʟʟ ᴏᴘᴇɴ ɪɴ ɪɴᴄᴏɢɴɪᴛᴏ ᴍᴏᴅᴇ.\n" +
+        "2. ʟᴏɢ ɪɴᴛᴏ ᴛʜᴇ sᴛᴇᴀᴍ ᴀᴄᴄᴏᴜɴᴛ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ sᴀᴠᴇ (ᴜsᴇʀ/ᴘᴀss/sᴛᴇᴀᴍɢᴜᴀʀᴅ/ǫʀ).\n" +
+        "3. ʟᴏɢɪɴ ᴄᴏᴍᴘʟᴇᴛᴇ, ᴅᴀᴛᴀ sᴀᴠᴇᴅ ᴀᴜᴛᴏᴍᴀᴛɪᴄᴀʟʟʏ.", 
         Fmt.magenta
     );
 
-    console.log(`\n${Fmt.dim}Launching temporary authentication browser instance...${Fmt.reset}\n`);
+    console.log(`\n${Fmt.dim}ʟᴀᴜɴᴄʜɪɴɢ ᴛᴇᴍᴘᴏʀᴀʀʏ ᴀᴜᴛʜᴇɴᴛɪᴄᴀᴛɪᴏɴ ʙʀᴏᴡsᴇʀ ɪɴsᴛᴀɴᴄᴇ...${Fmt.reset}\n`);
 
     try {
         const browser = await puppeteer.launch({
@@ -132,7 +131,7 @@ async function addAccountViaBrowserWindow() {
         const page = pages[0];
         await page.goto('https://steamcommunity.com/login/home/', { waitUntil: 'networkidle2' });
 
-        console.log(`${Fmt.cyan}🔄 Monitoring login state... Complete the authentication in the browser.${Fmt.reset}`);
+        console.log(`${Fmt.cyan}🔄 ᴍᴏɴɪᴛᴏʀɪɴɢ ʟᴏɢɪɴ sᴛᴀᴛᴇ... ᴄᴏᴍᴘʟᴇᴛᴇ ᴛʜᴇ ᴀᴜᴛʜᴇɴᴛɪᴄᴀᴛɪᴏɴ ɪɴ ᴛʜᴇ ʙʀᴏᴡsᴇʀ.${Fmt.reset}`);
 
         let cookies = [];
         let loggedIn = false;
@@ -161,35 +160,35 @@ async function addAccountViaBrowserWindow() {
         }
 
         if (loggedIn && steamId64) {
-            console.log(`\n${Fmt.green}✓ Login session captured for SteamID: ${steamId64}${Fmt.reset}`);
-            const accountName = await ask(`📝 ${Fmt.bold}Enter an alias/username for this account: ${Fmt.reset}`) || `Steam_${steamId64.substring(0, 6)}`;
+            console.log(`\n${Fmt.green}✓ sᴇssɪᴏɴ sᴛᴏʀᴇᴅ: ${steamId64}${Fmt.reset}`);
+            const accountName = await ask(`📝 ${Fmt.bold}ᴇɴᴛᴇʀ ɴᴀᴍᴇ: ${Fmt.reset}`) || `Steam_${steamId64.substring(0, 6)}`;
             
             await browser.close();
 
             db.run(`INSERT OR REPLACE INTO steamprofiles (username, steamId, cookies, token) VALUES (?, ?, ?, ?)`, 
                 [accountName, steamId64, JSON.stringify(cookies), 'API_Auth_Session'], (dbErr) => {
                     if (dbErr) {
-                        renderBox("DB FAIL", dbErr.message, Fmt.red);
+                        renderBox("ᴅʙ ᴡʀɪᴛᴇ ᴇcodeʀʀᴏʀ", dbErr.message, Fmt.red);
                         setTimeout(() => profilesMenu(), 4000);
                         return;
                     }
-                    profilesMenu(`Account [${accountName}] added and secured in storage!`);
+                    profilesMenu(`ᴀᴄᴄᴏᴜɴᴛ [${accountName}] ᴀᴅaddᴇᴅ ᴀɴᴅ sᴇᴄᴜʀᴇᴅ ɪɴ sᴛᴏʀᴀɢᴇ!`);
                 }
             );
         } else {
             await browser.close();
-            profilesMenu('Process aborted or window closed.');
+            profilesMenu('ᴘʀᴏᴄᴇss ᴀʙᴏʀᴛᴇᴅ ᴏʀ ᴡɪɴᴅᴏᴡ ᴄʟᴏsᴇᴅ.');
         }
     } catch (err) {
-        profilesMenu(`Allocation error: ${err.message}`);
+        profilesMenu(`ᴀʟʟᴏᴄᴀᴛɪᴏɴ ᴇʀʀᴏʀ: ${err.message}`);
     }
 }
 
 async function removeSteamAccount() {
-    const accountName = await ask(`🗑️ ` + Fmt.bold + `Enter account username or ID to remove from vault: ` + Fmt.reset);
+    const accountName = await ask(`🗑️ ` + Fmt.bold + `ᴇɴᴛᴇʀ ᴜsᴇʀ ɪᴅ ᴛᴏ ᴅᴇʟᴇᴛᴇ: ` + Fmt.reset);
     db.run(`DELETE FROM steamprofiles WHERE id = ? OR username = ?`, [accountName, accountName], () => {
         db.run(`DELETE FROM account_locks WHERE steamId = ?`, [accountName], () => {
-            profilesMenu('Account record successfully dropped from local database.');
+            profilesMenu('ᴀᴄᴄᴏᴜɴᴛ ʀᴇᴍᴏᴠᴇᴅ ᴄʟᴇᴀɴʟʏ.');
         });
     });
 }
@@ -216,14 +215,14 @@ function db_run(query, params = []) {
 async function autoRunMultiAPI() {
     while (true) {
         try {
-            displayHeader('Pure API Pipeline Processing');
+            displayHeader('ᴘᴜʀᴇ ᴀᴘɪ ᴘɪᴘᴇʟɪɴᴇ ᴘʀᴏᴄᴇssɪɴɢ');
             
-            console.log(`${Fmt.gray}[API] Fetching profile linkages from Rep4Rep servers...${Fmt.reset}`);
+            console.log(`${Fmt.gray}[ᴀᴘɪ] ᴅᴏᴡɴʟᴏᴀᴅɪɴɢ ʟɪɴᴋs via ʀᴇᴘ4ʀᴇᴘ sᴇʀᴠᴇʀs...${Fmt.reset}`);
             const response = await fetch(`https://rep4rep.com/pub-api/user/steamprofiles?apiToken=${config.apiToken}`);
             const data = await response.json();
             
             if (data.error) {
-                console.log(`${Fmt.red}[API ERROR] Server response dropped: ${data.error}${Fmt.reset}`);
+                console.log(`${Fmt.red}[ᴀᴘɪ ᴇʀʀᴏʀ] sᴇʀᴠᴇʀ ʀᴇsᴘᴏɴsᴇ ᴅʀᴏᴘᴘᴇᴅ: ${data.error}${Fmt.reset}`);
                 await new Promise(r => setTimeout(r, 15000));
                 continue;
             }
@@ -237,12 +236,11 @@ async function autoRunMultiAPI() {
 
             const steamProfiles = await db_all('SELECT id, username, steamId, cookies, token FROM steamprofiles');
             if (steamProfiles.length === 0) {
-                console.log(`${Fmt.yellow}[WARNING] Local vault storage holds 0 accounts. Stop pipeline.${Fmt.reset}`);
-                await ask(`\nPress Enter to return to main dashboard menu...`);
+                console.log(`${Fmt.yellow}[ᴡᴀʀɴɪɴɢ] ʟᴏᴄᴀʟ ᴠᴀᴜʟᴛ sᴛᴏʀᴀɢᴇ ʜᴏʟᴅs 0 ᴀᴄᴄᴏᴜɴᴛs. sᴛᴏᴘ ᴘɪᴘᴇʟɪɴᴇ.${Fmt.reset}`);
+                await ask(`\nᴘʀᴇss ᴇɴᴛᴇʀ ᴛᴏ ʀᴇᴛᴜʀɴ ᴛᴏ ᴍᴀɪɴ ᴅᴀsʜʙᴏᴀʀᴅ ᴍᴇɴᴜ...`);
                 return homeMenu();
             }
 
-            // Retrieve all active persistent database 1-hour memory locks
             const currentLocks = await db_all('SELECT steamId, lock_until FROM account_locks');
             const locksMap = {};
             currentLocks.forEach(l => { locksMap[l.steamId] = new Date(l.lock_until).getTime(); });
@@ -255,11 +253,10 @@ async function autoRunMultiAPI() {
                 const lockTime = locksMap[steamProfile.steamId] || 0;
                 const nowTime = Date.now();
 
-                // Memory lock check: Skip the account completely if it is in an independent 1-hour lockout
                 if (lockTime > nowTime) {
                     const remainingSeconds = Math.ceil((lockTime - nowTime) / 1000);
                     if (lockTime < nearestUnlockTime) nearestUnlockTime = lockTime;
-                    console.log(`  ${Fmt.red}🚨 Independent Lock Active [${steamProfile.username}]:${Fmt.reset} Suspended for another ${Math.ceil(remainingSeconds / 60)} mins. Skipping context...`);
+                    console.log(`  ${Fmt.red}ʟᴏᴄᴋᴇᴅ [${steamProfile.username}] suspended. ${Math.ceil(remainingSeconds / 60)} mins.${Fmt.reset}`);
                     continue;
                 }
 
@@ -267,7 +264,7 @@ async function autoRunMultiAPI() {
 
                 try {
                     if (!repSteamProfiles.includes(steamProfile.steamId)) {
-                        console.log(`[API] Registering account identity: ${steamProfile.username} on Rep4Rep dashboard...`);
+                        console.log(`[ᴀᴘɪ] ʀᴇɢɪsᴛᴇʀɪɴɢ ᴀᴄᴄᴏᴜɴᴛ ɪᴅᴇntɪᴛʏ: ${steamProfile.username} ᴏɴ ʀᴇᴘ4ʀᴇᴘ ᴅᴀsʜʙᴏᴀʀᴅ...`);
                         const bodyParams = new URLSearchParams({ apiToken: config.apiToken, steamProfile: steamProfile.steamId });
                         await fetch('https://rep4rep.com/pub-api/user/steamprofiles/add', { method: 'POST', body: bodyParams });
                         
@@ -281,35 +278,34 @@ async function autoRunMultiAPI() {
                         }
                     }
 
-                    renderBox("ACTIVE STREAM TARGET", `Processing API requests for account: ${steamProfile.username}`, Fmt.cyan);
+                    renderBox("ᴀᴄᴛɪᴠᴇ sᴛʀᴇᴀᴍ ᴛᴀʀɢᴇᴛ", `ᴘʀᴏᴄᴇssɪɴɢ ᴀᴘɪ ʟᴏᴏᴘs ᴏɴ ᴀᴄᴄᴏᴜɴᴛ: ${steamProfile.username}`, Fmt.cyan);
                     community.setCookies(JSON.parse(steamProfile.cookies));
                     
                     const loggedIn = await new Promise((r) => community.loggedIn((err, li) => r(!err && li)));
                     if (!loggedIn) {
-                        console.log(`  ${Fmt.red}❌ Session cookies expired for ${steamProfile.username}. Skipping context execution...${Fmt.reset}\n`);
+                        console.log(`  ${Fmt.red}❌ sᴇssɪᴏɴ ᴄᴏᴏᴋɪᴇs ᴇxᴘɪʀᴇᴅ ᴏɴ ${steamProfile.username}. sᴋɪᴘ ᴄᴏɴᴛᴇxᴛ...\n`);
                         continue;
                     }
 
                     let keepUsingAccount = true;
 
-                    // CONTINUOUS TARGET HOOK: Keep pulling tasks and processing this account as long as it succeeds
                     while (keepUsingAccount) {
                         const tasksRes = await fetch(`https://rep4rep.com/pub-api/tasks?apiToken=${config.apiToken}&steamProfile=${repSteamProfilesObj[steamProfile.steamId]}`);
                         const tasks = await tasksRes.json();
                         
                         if (tasks.error || tasks.length === 0) {
-                            console.log(`  ${Fmt.gray}[SCANNER] No more tasks available for account: ${steamProfile.username}. Moving to next node...${Fmt.reset}\n`);
+                            console.log(`  ${Fmt.gray}[sᴄᴀɴɴᴇʀ] ɴᴏ ᴍᴏʀᴇ ᴛᴀsᴋs ᴀᴠᴀɪʟᴀʙʟᴇ ᴏɴ ᴀᴄᴄᴏᴜɴᴛ: ${steamProfile.username}. ᴍᴏᴠɪɴɢ ᴛᴏ ɴᴇxᴛ ɴᴏᴅᴇ...${Fmt.reset}\n`);
                             keepUsingAccount = false;
                             break;
                         }
 
                         const currentBatch = tasks.slice(0, 3);
-                        console.log(`${Fmt.gray}  ↳ Queued batch subset: [${currentBatch.length}/3] operations mapped.${Fmt.reset}\n`);
+                        console.log(`${Fmt.gray}  ↳ ǫᴜᴇᴜᴇᴅ ʙᴀᴛᴄʜ sᴜʙsᴇᴛ: [${currentBatch.length}/3] ᴏᴘᴇʀᴀᴛɪᴏɴs ᴍᴀᴘᴘᴇᴅ.${Fmt.reset}\n`);
 
                         let accountRateLimited = false;
 
                         for (const task of currentBatch) {
-                            console.log(`  ${Fmt.gray}-> Pushing comment payload:${Fmt.reset} heading to target -> ${task.targetSteamProfileName}`);
+                            console.log(`  ${Fmt.gray}-> ᴘᴜsʜɪɴɢ ᴄᴏᴍᴍᴇɴᴛ ᴘᴀʏʟᴏᴀᴅ:${Fmt.reset} ʜᴇᴀᴅɪɴɢ ᴛᴏ ᴛᴀʀɢᴇᴛ -> ${task.targetSteamProfileName}`);
                             
                             try {
                                 await new Promise((res, rejectSession) => {
@@ -328,60 +324,55 @@ async function autoRunMultiAPI() {
                                 const r4rData = await r4rRes.json();
 
                                 if (r4rData.error) {
-                                    console.log(`     ${Fmt.bold}${Fmt.yellow}⚠️ [R4R REJECTION] Server dropped validation response: ${r4rData.error}${Fmt.reset}\n`);
+                                    console.log(`     ${Fmt.bold}${Fmt.yellow}⚠️ [ʀ4ʀ ʀᴇᴊᴇᴄᴛɪᴏɴ] sᴇʀᴠᴇʀ ᴅʀᴏᴘᴘᴇᴅ ᴠᴀʟɪᴅᴀᴛɪᴏɴ ʀᴇsᴘᴏɴsᴇ: ${r4rData.error}${Fmt.reset}\n`);
                                 } else {
-                                    console.log(`     ${Fmt.bold}${Fmt.green}[SUCCESS] (Target ID: ${task.targetSteamProfileId}) Comment synced on Rep4Rep.${Fmt.reset}\n`);
+                                    console.log(`     ${Fmt.bold}${Fmt.green}[sᴜᴄᴄᴇss] (ᴛᴀʀɢᴇᴛ ɪᴅ: ${task.targetSteamProfileId}) ᴄᴏᴍᴍᴇɴᴛ sʏɴᴄᴇᴅ ᴏɴ ʀᴇᴘ4ʀᴇᴘ.${Fmt.reset}\n`);
                                     totalTasksProcessedInCycle++;
                                 }
 
-                                await new Promise(r => setTimeout(r, 15000)); // Standard safety spacing between individual items
+                                await new Promise(r => setTimeout(r, 15000));
 
                             } catch (steamError) {
-                                console.log(`     ${Fmt.bold}${Fmt.red}❌ [STEAM CRITICAL REJECTION] ${steamError.message}${Fmt.reset}`);
+                                console.log(`     ${Fmt.bold}${Fmt.red}❌ [sᴛᴇᴀᴍ ᴄʀɪᴛɪᴄᴀʟ ʀᴇᴊᴇᴄᴛɪᴏɴ] ${steamError.message}${Fmt.reset}`);
                                 
-                                // Hard lockout timestamp initialization (Current time + 1 hour forward memory stamp)
                                 const lockExpiryISO = new Date(Date.now() + 60 * 60 * 1000).toISOString();
                                 await db_run(`INSERT OR REPLACE INTO account_locks (steamId, lock_until) VALUES (?, ?)`, [steamProfile.steamId, lockExpiryISO]);
                                 
-                                console.log(`\n🚨 ${Fmt.bold}${Fmt.red}[PROTECTION ACTIVE] [${steamProfile.username}] locked independently for 1 HOUR. Skipping to next account instantly...${Fmt.reset}\n`);
+                                console.log(`\n🚨 ${Fmt.bold}${Fmt.red}[ᴘʀᴏᴛᴇᴄᴛɪᴏɴ ᴀᴄᴛɪᴠᴇ] [${steamProfile.username}] ʟᴏᴄᴋᴇᴅ ɪɴᴅᴇᴘᴇɴᴅᴇɴᴛʟʏ ᴅᴜʀɪɴɢ 1 ʜᴏᴜʀ. sᴋɪᴘ ᴛᴏ ɴᴇxᴛ...${Fmt.reset}\n`);
                                 
                                 accountRateLimited = true;
-                                keepUsingAccount = false; // Break continuous execution loop for this account context
+                                keepUsingAccount = false; 
                                 break; 
                             }
                         }
 
-                        // If the batch completed cleanly with zero faults, keep using this account (it stays in the while loop)
                         if (!accountRateLimited && keepUsingAccount) {
-                            console.log(`\n${Fmt.bold}${Fmt.green}[⚡ FAST TRACK] Batch successful on [${steamProfile.username}]. Continuing execution on this account...${Fmt.reset}\n`);
+                            console.log(`\n${Fmt.bold}${Fmt.green}[⚡ ǫᴜɪᴄᴋ ʀᴜɴ] ʙᴀᴛᴄʜ sᴜᴄᴄᴇss ᴏɴ [${steamProfile.username}]. ᴄᴏɴᴛɪɴᴜɪɴɢ ᴇxᴇᴄᴜᴛɪᴏɴ ᴏɴ ᴛʜɪs ᴀᴄᴄᴏᴜɴᴛ...${Fmt.reset}\n`);
                             await new Promise(r => setTimeout(r, 3000));
                         }
                     }
 
                 } catch (profileException) {
-                    console.log(`  ${Fmt.red}❌ [PROFILE EXCEPTION] Isolation block caught error on ${steamProfile.username}: ${profileException.message}${Fmt.reset}\n`);
+                    console.log(`  ${Fmt.red}❌ [ᴀᴄᴄᴏᴜɴᴛ ɪssᴜᴇ] ɪsᴏʟᴀᴛɪᴏɴ ʙʟᴏᴄᴋ ᴄᴀᴜɢʜᴛ ᴇʀʀᴏʀ ᴏɴ ${steamProfile.username}: ${profileException.message}${Fmt.reset}\n`);
                 }
             }
             
             // --- LOOP CONTROL CONDITIONAL FLOWS ---
             if (totalTasksProcessedInCycle > 0) {
-                // SUCESO FLOW: If tasks were processed successfully across any unlocked nodes, re-run immediately
                 await new Promise(r => setTimeout(r, 2000));
             } 
             else if (activeAvailableAccountsCount === 0 && nearestUnlockTime !== Infinity) {
-                // ALL NODES LOCKED: No blocking countdown. Print status, sleep 60s, loop clears screen and prints freshly updated minutes
-                console.log(`\n${Fmt.bold}${Fmt.red}[ALL ACCOUNTS LOCKEDOUT] Every account inside storage is currently restricted.${Fmt.reset}`);
-                console.log(`\n${Fmt.gray}🔄 Refreshing lock status list in 60 seconds...${Fmt.reset}`);
+                console.log(`\n${Fmt.bold}${Fmt.red}[Aʟʟ ᴀᴄᴄᴏᴜɴᴛs ʟᴏᴄᴋᴇᴅᴏᴜᴛ] ᴇᴠᴇʀʏ ᴀᴄᴄᴏᴜɴᴛ ɪɴsɪᴅᴇ sᴛᴏʀᴀɢᴇ ɪs ᴄᴜʀʀᴇɴᴛʟʏ ʀᴇsᴛʀɪᴄᴛᴇᴅ.${Fmt.reset}`);
+                console.log(`\n${Fmt.gray}🔄 ᴜᴘᴅᴀᴛɪɴɢ ʟᴏᴄᴋ sᴛᴀᴛᴜs ʟɪsᴛ ɪɴ 60 sᴇᴄᴏɴᴅs...${Fmt.reset}`);
                 await new Promise(r => setTimeout(r, 60000));
             } 
             else {
-                // QUEUE EMPTY: No tasks available on unlocked profiles. Sleep 1 minute to stay clean on the server API
-                console.log(`\n${Fmt.gray}[INFO] All active profile queues are empty. Resting for 1 minute before checking back...${Fmt.reset}`);
-                await countdown(60, "⏳ QUEUE EMPTY COOLDOWN");
+                console.log(`\n${Fmt.gray}[ɴᴏᴛᴇ] ᴀʟʟ ᴀᴄᴛɪᴠᴇ ǫᴜᴇᴜᴇs ᴀʀᴇ ᴇᴍᴘᴛʏ. ʀᴇsᴛɪɴɢ 1 ᴍɪɴᴜᴛᴇ ᴘʀɪᴏʀ ᴛᴏ ᴄʜᴇᴄᴋɪɴɢ ʙᴀᴄᴋ...${Fmt.reset}`);
+                await countdown(60, "⏳ ǫᴜᴇᴜᴇ ᴇᴍᴘᴛʏ ᴄᴏᴏʟᴅᴏᴡɴ");
             }
 
         } catch (globalError) {
-            console.log(`${Fmt.red}[CRITICAL CORE EXCEPTION] Iteration break: ${globalError.message}${Fmt.reset}`);
+            console.log(`${Fmt.red}[ᴄʀɪᴛɪᴄᴀʟ ᴄᴏʀᴇ ᴇxᴄᴇᴘᴛɪᴏɴ] ɪᴛᴇʀᴀᴛɪᴏɴ ʙʀᴇᴀᴋ: ${globalError.message}${Fmt.reset}`);
             await new Promise(r => setTimeout(r, 10000));
         }
     }
