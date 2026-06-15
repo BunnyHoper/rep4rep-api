@@ -36,7 +36,7 @@ Stop manually managing comments and tasks (it's a waste of time). **rep4rep-api*
 ## ⚙️ Quick Start Guide
 
 1.  **Dependencies:** Ensure Node.js is installed.
-```bash
+    ```bash
     npm install
     ```
 
@@ -45,7 +45,7 @@ Stop manually managing comments and tasks (it's a waste of time). **rep4rep-api*
 3.  **Account Registration:** Run the script and navigate to the "Accounts Vault" to link your Steam profiles via the automated incognito browser window.
 
 4.  **Execute:** Start the background pipeline to begin task processing:
-```bash
+    ```bash
     node index.js
     ```
 
