@@ -369,10 +369,10 @@ async function autoRunMultiAPI() {
                 await new Promise(r => setTimeout(r, 2000));
             } 
             else if (activeAvailableAccountsCount === 0 && nearestUnlockTime !== Infinity) {
-                // ALL NODES LOCKED: If every single account is under the 1-hour memory block, wait dynamically for the earliest unlock
-                const totalSleepSeconds = Math.max(10, Math.ceil((nearestUnlockTime - Date.now()) / 1000));
+                // ALL NODES LOCKED: No blocking countdown. Print status, sleep 60s, loop clears screen and prints freshly updated minutes
                 console.log(`\n${Fmt.bold}${Fmt.red}[ALL ACCOUNTS LOCKEDOUT] Every account inside storage is currently restricted.${Fmt.reset}`);
-                await countdown(totalSleepSeconds, "🚨 INDEPENDENT LOCKOUT DELAY");
+                console.log(`\n${Fmt.gray}🔄 Refreshing lock status list in 60 seconds...${Fmt.reset}`);
+                await new Promise(r => setTimeout(r, 60000));
             } 
             else {
                 // QUEUE EMPTY: No tasks available on unlocked profiles. Sleep 1 minute to stay clean on the server API
