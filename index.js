@@ -17,10 +17,18 @@ const Fmt = {
 const rl = readLine.createInterface({ input: process.stdin, output: process.stdout });
 const ask = (query) => new Promise((resolve) => rl.question(query, resolve));
 
+// --- SET INITIAL TITLE ON BOOT IMMEDIATELY ---
+process.stdout.write(`\x1b]0;ʀᴇᴘ x ʀᴇᴘ ᴀᴘɪ │ 0 ᴀᴄᴄᴏᴜɴᴛ ʟᴏᴀᴅᴇᴅ\x07`);
+
 const db = new sqlite3.Database('./steamprofiles.db', (err) => {
     if (err) process.exit(1);
     initializeSchema();
-    homeMenu();
+    // Update title with accurate count immediately upon database readiness
+    db.all('SELECT id FROM steamprofiles', [], (dbErr, rows) => {
+        const count = rows ? rows.length : 0;
+        process.stdout.write(`\x1b]0;ʀᴇᴘ x ʀᴇᴘ ᴀᴘɪ │ ${count} ᴀᴄᴄᴏᴜɴᴛ ʟᴏᴀᴅᴇᴅ\x07`);
+        homeMenu();
+    });
 });
 
 function initializeSchema() {
@@ -40,6 +48,15 @@ function initializeSchema() {
     });
 }
 
+async function updateWindowTitle() {
+    try {
+        const rows = await db_all('SELECT id FROM steamprofiles');
+        process.stdout.write(`\x1b]0;ʀᴇᴘ x ʀᴇᴘ ᴀᴘɪ │ ${rows.length} ᴀᴄᴄᴏᴜɴᴛ ʟᴏᴀᴅᴇᴅ\x07`);
+    } catch (e) {
+        process.stdout.write(`\x1b]0;ʀᴇᴘ x ʀᴇᴘ ᴀᴘɪ │ 0 ᴀᴄᴄᴏᴜɴᴛ ʟᴏᴀᴅᴇᴅ\x07`);
+    }
+}
+
 function renderBox(title, content, color = Fmt.cyan) {
     const width = 95; 
     const border = "─".repeat(width - 2);
@@ -52,6 +69,7 @@ function renderBox(title, content, color = Fmt.cyan) {
     console.log(`└${border}┘${Fmt.reset}`);
 }
 
+// --- UPDATED DISPLAY HEADER SHORTCUT ---
 function displayHeader(subtitle = 'ᴅᴀsʜʙᴏᴀʀᴅ') {
     console.log('\x1Bc');
     console.log(`${Fmt.bold}${Fmt.bgMagenta}${Fmt.white}  📂 ʀᴇᴘ х ʀᴇᴘ ᴀᴘɪ  ${Fmt.reset} ${Fmt.dim}v${version}${Fmt.reset}`);
@@ -70,8 +88,9 @@ async function countdown(seconds, prefix = "⏳ ᴄᴏᴏʟᴅᴏᴡɴ") {
 }
 
 async function homeMenu(notification = false) {
+    await updateWindowTitle();
     displayHeader('ᴍᴀɪɴ ᴄᴏʀᴇ');
-    if (notification) console.log(` ${Fmt.bgBlue}${Fmt.white}${Fmt.bold} ɴᴏᴛᴇ ${Fmt.reset} ${Fmt.cyan}${notification}${Fmt.reset}\n`);
+    if (notification) console.log(` ${Fmt.bgBlue}${Fmt.white}${Fmt.bold} ᴀᴠɪsᴏ ${Fmt.reset} ${Fmt.cyan}${notification}${Fmt.reset}\n`);
 
     console.log(`  ${Fmt.magenta}1.│${Fmt.reset} ${Fmt.bold}ʀᴜɴ ᴍᴜʟᴛɪ-ᴀᴄᴄᴏᴜɴᴛ ᴀᴘɪ ᴘɪᴘᴇʟɪɴᴇ (ᴄᴏɴᴛɪɴᴜᴏᴜs ᴀᴜᴛᴏᴍᴀᴛᴇᴅ ʟᴏᴏᴘ)${Fmt.reset}`);
     console.log(`  ${Fmt.magenta}2.│${Fmt.reset} ${Fmt.bold}ᴍᴀɴᴀɢᴇ sᴛᴇᴀᴍ ᴀᴄᴄᴏᴜɴᴛs ᴠᴀᴜʟᴛ ${Fmt.gray}(ᴀᴅadd/ his/ᴅᴇʟᴇᴛᴇ ᴀᴄᴄᴏᴜɴᴛs)${Fmt.reset}`);
@@ -84,6 +103,7 @@ async function homeMenu(notification = false) {
 }
 
 async function profilesMenu(notification = false) {
+    await updateWindowTitle();
     displayHeader('ᴀᴄᴄᴏᴜɴᴛs ᴠᴀᴜʟᴛ');
     if (notification) console.log(` ${Fmt.bgBlue}${Fmt.white}${Fmt.bold} sᴛᴀᴛᴇ ${Fmt.reset} ${Fmt.yellow}${notification}${Fmt.reset}\n`);
 
@@ -103,7 +123,7 @@ async function profilesMenu(notification = false) {
     console.log(`  ${Fmt.cyan}2.│${Fmt.reset} ᴅᴇʟᴇᴛᴇ ᴀɴ ᴀᴄᴄᴏᴜɴᴛ ʀᴇᴄᴏʀᴅ`);
     console.log(`  ${Fmt.gray}3.│ ʀᴏʟʟʙᴀᴄᴋ ᴛᴏ ᴍᴀɪɴ ᴍᴇɴᴜ${Fmt.reset}\n`);
 
-    const decision = await ask(`${Fmt.bold}${Fmt.cyan}>> sᴇʟᴇᴄᴛ ᴏᴘᴛɪᴏɴ: ${Fmt.reset}`);
+    const decision = await ask(`${Fmt.bold}${Fmt.cyan}>> sᴇʟᴇᴄᴛ ᴏᴘᴛɪᴏ联: ${Fmt.reset}`);
     if (decision === '1') return addAccountViaBrowserWindow();
     if (decision === '2') return removeSteamAccount();
     if (decision === '3') return homeMenu();
@@ -172,7 +192,7 @@ async function addAccountViaBrowserWindow() {
                         setTimeout(() => profilesMenu(), 4000);
                         return;
                     }
-                    profilesMenu(`ᴀᴄᴄᴏᴜɴᴛ [${accountName}] ᴀᴅaddᴇᴅ ᴀɴᴅ sᴇᴄᴜʀᴇᴅ ɪɴ sᴛᴏʀᴀɢᴇ!`);
+                    profilesMenu(`ᴀᴄᴄᴏᴜɴᴛ [${accountName}] ᴀᴅaddᴇᴅ ᴀɴ slowed sᴇᴄᴜʀᴇᴅ ɪɴ sᴛᴏʀᴀɢE!`);
                 }
             );
         } else {
@@ -235,6 +255,10 @@ async function autoRunMultiAPI() {
             });
 
             const steamProfiles = await db_all('SELECT id, username, steamId, cookies, token FROM steamprofiles');
+            
+            // --- LIVE UPDATE RUNTIME WINDOW TITLE ---
+            process.stdout.write(`\x1b]0;ʀᴇᴘ x ʀᴇᴘ ᴀᴘɪ │ ${steamProfiles.length} ᴀᴄᴄᴏᴜɴᴛ ʟᴏᴀᴅᴇᴅ\x07`);
+
             if (steamProfiles.length === 0) {
                 console.log(`${Fmt.yellow}[ᴡᴀʀɴɪɴɢ] ʟᴏᴄᴀʟ ᴠᴀᴜʟᴛ sᴛᴏʀᴀɢᴇ ʜᴏʟᴅs 0 ᴀᴄᴄᴏᴜɴᴛs. sᴛᴏᴘ ᴘɪᴘᴇʟɪɴᴇ.${Fmt.reset}`);
                 await ask(`\nᴘʀᴇss ᴇɴᴛᴇʀ ᴛᴏ ʀᴇᴛᴜʀɴ ᴛᴏ ᴍᴀɪɴ ᴅᴀsʜʙᴏᴀʀᴅ ᴍᴇɴᴜ...`);
@@ -256,7 +280,7 @@ async function autoRunMultiAPI() {
                 if (lockTime > nowTime) {
                     const remainingSeconds = Math.ceil((lockTime - nowTime) / 1000);
                     if (lockTime < nearestUnlockTime) nearestUnlockTime = lockTime;
-                    console.log(`  ${Fmt.red}ʟᴏᴄᴋᴇᴅ [${steamProfile.username}] ѕᴜѕᴘᴇɴᴅᴇᴅ. ${Math.ceil(remainingSeconds / 60)} ᴍɪɴѕ.${Fmt.reset}`);
+                    console.log(`  ${Fmt.red}ʟᴏᴄᴋᴇᴅ [${steamProfile.username}] ${Math.ceil(remainingSeconds / 60)} ᴍɪɴѕ.${Fmt.reset}`);
                     continue;
                 }
 
@@ -264,7 +288,7 @@ async function autoRunMultiAPI() {
 
                 try {
                     if (!repSteamProfiles.includes(steamProfile.steamId)) {
-                        console.log(`[ᴀᴘɪ] ʀᴇɢɪsᴛᴇʀɪɴɢ ᴀᴄᴄᴏᴜɴᴛ ɪᴅᴇntɪᴛʏ: ${steamProfile.username} ᴏɴ ʀᴇᴘ4ʀᴇᴘ ᴅᴀsʜʙᴏᴀʀᴅ...`);
+                        console.log(`[ᴀᴘɪ] ʀᴇɢɪsᴛᴇʀɪɴɢ ᴀᴄᴄᴏᴜɴ通 ɪᴅᴇntɪᴛʏ: ${steamProfile.username} ᴏɴ ʀᴇᴘ4ʀᴇᴘ ᴅᴀsʜʙᴏᴀʀᴅ...`);
                         const bodyParams = new URLSearchParams({ apiToken: config.apiToken, steamProfile: steamProfile.steamId });
                         await fetch('https://rep4rep.com/pub-api/user/steamprofiles/add', { method: 'POST', body: bodyParams });
                         
@@ -305,7 +329,7 @@ async function autoRunMultiAPI() {
                         let accountRateLimited = false;
 
                         for (const task of currentBatch) {
-                            console.log(`  ${Fmt.gray}-> ᴘᴜsʜɪɴɢ ᴄᴏᴍᴍᴇɴᴛ ᴘᴀʏʟᴏᴀᴅ:${Fmt.reset} ʜᴇᴀᴅɪɴɢ ᴛᴏ ᴛᴀʀɢᴇᴛ -> ${task.targetSteamProfileName}`);
+                            console.log(`  ${Fmt.gray}-> ᴘᴜsʜɪɴɢ ᴄᴏᴍᴍᴇɴᴛ ᴘᴀʏxlᴏᴀᴅ:${Fmt.reset} ʜᴇᴀᴅɪɴɢ ᴛᴏ ᴛᴀʀɢᴇᴛ -> ${task.targetSteamProfileName}`);
                             
                             try {
                                 await new Promise((res, rejectSession) => {
@@ -324,7 +348,7 @@ async function autoRunMultiAPI() {
                                 const r4rData = await r4rRes.json();
 
                                 if (r4rData.error) {
-                                    console.log(`     ${Fmt.bold}${Fmt.yellow}⚠️ [ʀ4ʀ ʀᴇᴊᴇᴄᴛɪᴏɴ] sᴇʀᴠᴇʀ ᴅʀᴏᴘᴘᴇᴅ ᴠᴀʟɪᴅᴀᴛɪᴏɴ ʀᴇsᴘᴏɴsᴇ: ${r4rData.error}${Fmt.reset}\n`);
+                                    console.log(`     ${Fmt.bold}${Fmt.yellow}⚠️ [ʀ4ʀ ʀᴇᴊᴇᴄᴛɪᴏɴ] sᴇʀᴠᴇʀ ᴅcodeʀᴏᴘᴘᴇᴅ ᴠᴀʟɪᴅᴀᴛɪᴏɴ ʀᴇsᴘᴏɴsᴇ: ${r4rData.error}${Fmt.reset}\n`);
                                 } else {
                                     console.log(`     ${Fmt.bold}${Fmt.green}[sᴜᴄᴄᴇss] (ᴛᴀʀɢᴇᴛ ɪᴅ: ${task.targetSteamProfileId}) ᴄᴏᴍᴍᴇɴᴛ sʏɴᴄᴇᴅ ᴏɴ ʀᴇᴘ4ʀᴇᴘ.${Fmt.reset}\n`);
                                     totalTasksProcessedInCycle++;
@@ -338,7 +362,7 @@ async function autoRunMultiAPI() {
                                 const lockExpiryISO = new Date(Date.now() + 60 * 60 * 1000).toISOString();
                                 await db_run(`INSERT OR REPLACE INTO account_locks (steamId, lock_until) VALUES (?, ?)`, [steamProfile.steamId, lockExpiryISO]);
                                 
-                                console.log(`\n🚨 ${Fmt.bold}${Fmt.red}[ᴘʀᴏᴛᴇᴄᴛɪᴏɴ ᴀᴄᴛɪᴠᴇ] [${steamProfile.username}] ʟᴏᴄᴋᴇᴅ ɪɴᴅᴇᴘᴇɴᴅᴇɴᴛʟʏ ᴅᴜʀɪɴɢ 1 ʜᴏᴜʀ. sᴋɪᴘ ᴛᴏ ɴᴇxᴛ...${Fmt.reset}\n`);
+                                console.log(`\n🚨 ${Fmt.bold}${Fmt.red}[ᴘʀᴏᴛᴇᴄᴛɪᴏɴ ᴀᴄᴛɪᴠᴇ] [${steamProfile.username}] ʟᴏᴄᴋᴇᴅ ɪɴᴅblock_untilʟʏ ᴘᴀʀᴀ 1 ʜᴏᴜʀ. sᴋɪᴘ ᴛᴏ ɴᴇxᴛ...${Fmt.reset}\n`);
                                 
                                 accountRateLimited = true;
                                 keepUsingAccount = false; 
@@ -347,7 +371,7 @@ async function autoRunMultiAPI() {
                         }
 
                         if (!accountRateLimited && keepUsingAccount) {
-                            console.log(`\n${Fmt.bold}${Fmt.green}[⚡ ǫᴜɪᴄᴋ ʀᴜɴ] ʙᴀᴛᴄʜ sᴜᴄᴄᴇss ᴏɴ [${steamProfile.username}]. ᴄᴏɴᴛɪɴᴜɪɴɢ ᴇxᴇᴄᴜᴛɪᴏɴ ᴏɴ ᴛʜɪs ᴀᴄᴄᴏᴜɴᴛ...${Fmt.reset}\n`);
+                            console.log(`\n${Fmt.bold}${Fmt.green}[⚡ ʜɪʟᴏ ᴅɪʀᴇᴄᴛᴏ] ʙᴀᴛᴄʜ sᴜᴄᴄᴇss ᴏɴ [${steamProfile.username}]. ᴄᴏɴᴛɪɴᴜɪɴɢ ᴇxᴇᴄᴜᴛɪᴏɴ ᴏɴ ᴛʜɪs ᴀᴄᴄᴏᴜɴᴛ...${Fmt.reset}\n`);
                             await new Promise(r => setTimeout(r, 3000));
                         }
                     }
