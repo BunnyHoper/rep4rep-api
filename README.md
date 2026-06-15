@@ -1,4 +1,4 @@
-# 🌌 Bunny API Automator - Steam & Rep4Rep Pipeline
+# 🌌 rep4rep-api - Steam & Rep4Rep Pipeline
 [![GitHub repo](https://img.shields.io/badge/github-aritzbaraka90--tech-blue?style=for-the-badge&logo=github)](https://github.com/aritzbaraka90-tech)
 [![Runtime](https://img.shields.io/badge/Runtime-Node.js%2020+-green?style=for-the-badge&logo=node.js)](https://nodejs.org)
 [![Version](https://img.shields.io/badge/ver-1.0.0-red?style=for-the-badge)](https://github.com/aritzbaraka90-tech)
@@ -10,7 +10,7 @@
 
 ## ✨ Introduction: Effortless Reputation Scaling
 
-Stop manually managing comments and tasks (it's a waste of time). **Bunny API Automator** is an automated engine designed to handle multiple Steam accounts simultaneously. It integrates directly with Rep4Rep services to maximize efficiency, handling posting, verification, and independent lockout management without manual input.
+Stop manually managing comments and tasks (it's a waste of time). **rep4rep-api** is an automated engine designed to handle multiple Steam accounts simultaneously. It integrates directly with Rep4Rep services to maximize efficiency, handling posting, verification, and independent lockout management without manual input.
 
 ---
 
