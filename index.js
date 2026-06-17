@@ -7,6 +7,9 @@ const community = new SteamCommunity();
 const config = require('./config.json');
 const { version } = require('./package.json');
 
+// GLOBAL CONFIGURATION STATE
+let debugMode = false;
+
 const Fmt = {
     reset: "\x1b[0m", bold: "\x1b[1m", dim: "\x1b[2m", italic: "\x1b[3m",
     gray: "\x1b[90m", red: "\x1b[31m", green: "\x1b[32m", yellow: "\x1b[33m", 
@@ -17,15 +20,20 @@ const Fmt = {
 const rl = readLine.createInterface({ input: process.stdin, output: process.stdout });
 const ask = (query) => new Promise((resolve) => rl.question(query, resolve));
 
-// ᴀᴇѕᴛʜᴇᴛɪᴄ ᴄᴏɴᴠᴇʀᴛᴇʀ
+// ᴀᴇѕᴛʜᴇᴛɪᴄ ᴄᴏɴᴠᴇʀᴛᴇʀ & ѕᴍᴀʀᴛ ѕᴀɴɪᴛɪᴢᴇʀ
 const est = (str) => {
     if (!str) return '';
+    // Strips out emojis, broken replacement blocks, stars and leaves pure monospaced lettering
+    let clean = str.replace(/[^\x20-\x7E]/g, '');
+    clean = clean.replace(/\s+/g, ' ').trim();
+    if (!clean) return 'ѕᴛᴇᴀᴍ_ᴀᴄᴄᴏᴜɴᴛ';
+    
     const map = {
         'a': 'ᴀ', 'b': 'ʙ', 'c': 'ᴄ', 'd': 'ᴅ', 'e': 'ᴇ', 'f': 'ꜰ', 'g': 'ɢ', 'h': 'ʜ', 'i': 'ɪ',
         'j': 'ᴊ', 'k': 'ᴋ', 'l': 'ʟ', 'm': 'ᴍ', 'n': 'ɴ', 'ñ': 'ñ', 'o': 'ᴏ', 'p': 'ᴘ', 'q': 'ǫ', 'r': 'ʀ',
         's': 'ѕ', 't': 'ᴛ', 'u': 'ᴜ', 'v': 'ᴠ', 'w': 'ᴡ', 'x': 'х', 'y': 'ʏ', 'z': 'ᴢ'
     };
-    return str.toLowerCase().split('').map(char => map[char] || char).join('');
+    return clean.toLowerCase().split('').map(char => map[char] || char).join('');
 };
 
 const pad = (str, len) => {
@@ -78,10 +86,6 @@ function renderBox(title, content, color = Fmt.magenta) {
     const border = "─".repeat(width - 2);
     console.log(`${color}┌${border}┐`);
     console.log(`│ ${Fmt.bold}${title.padEnd(width - 4)}${Fmt.reset}${color} │`);
-    console.log(`├${border}┤${Fmt.reset}`);
-    content.split('\n').forEach(line => {
-        console.log(`${color}│${Fmt.reset} ${line.padEnd(width - 4)} ${color}│`);
-    });
     console.log(`└${border}┘${Fmt.reset}`);
 }
 
@@ -91,15 +95,26 @@ function displayHeader(subtitle = 'ᴅᴀѕʜʙᴏᴀʀᴅ') {
     console.log(`${Fmt.dim} ᴄᴜʀʀᴇɴᴛ ᴄᴏɴᴛᴇхᴛ: ${Fmt.reset}${Fmt.italic}${Fmt.magenta}${subtitle}${Fmt.reset}\n`);
 }
 
-async function countdown(seconds, prefix = "⏳ ᴄᴏᴏʟᴅᴏᴡɴ") {
-    while (seconds > 0) {
-        const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-        const secs = (seconds % 60).toString().padStart(2, '0');
-        process.stdout.write(`\r     ${Fmt.bold}${Fmt.yellow}${prefix}: ɴᴇхᴛ ѕʏɴᴄ ᴄʏᴄʟᴇ ʀᴇᴀᴅʏ ɪɴ [${mins}:${secs}]${Fmt.reset} `);
-        await new Promise(r => setTimeout(r, 1000));
-        seconds--;
+function printAccountsTable(profiles) {
+    if (profiles.length > 0) {
+        console.log(`${Fmt.bold}${Fmt.magenta} ʀᴇɢɪѕᴛᴇʀᴇᴅ ᴀᴄᴄᴏᴜɴᴛѕ:                             ${Fmt.reset}`);
+        console.log(`${Fmt.magenta}┌────┬────────┬──────────────────────┬────────────────────┬──────────────────────────┐${Fmt.reset}`);
+        console.log(`${Fmt.magenta}│ ɪᴅ │ ѕᴛᴀᴛᴜѕ │ ᴜѕᴇʀɴᴀᴍᴇ             │ ѕᴛᴇᴀᴍ ɪᴅ           │ ʟᴀѕᴛ ᴄᴏᴍᴍᴇɴᴛ             │${Fmt.reset}`);
+        console.log(`${Fmt.magenta}├────┼────────┼──────────────────────┼────────────────────┼──────────────────────────┤${Fmt.reset}`);
+        
+        profiles.forEach(p => {
+            const idStr = pad(p.displayLetter, 2);
+            const statusIcon = p.isValid ? `${Fmt.green}   ✓    ${Fmt.magenta}` : `${Fmt.red}   х    ${Fmt.magenta}`;
+            const uName = pad(est(p.username || ''), 20);
+            const sId = pad((p.steamId || ''), 18);
+            const lComm = pad(est(p.last_comment || 'ɴᴜʟʟ'), 24);
+
+            console.log(`${Fmt.magenta}│ ${Fmt.cyan}${idStr} ${Fmt.magenta}│${statusIcon}│ ${Fmt.white}${uName} ${Fmt.magenta}│ ${Fmt.gray}${sId} ${Fmt.magenta}│ ${Fmt.dim}${lComm} ${Fmt.magenta}│${Fmt.reset}`);
+        });
+        console.log(`${Fmt.magenta}└────┴────────┴──────────────────────┴────────────────────┴──────────────────────────┘${Fmt.reset}\n`);
+    } else {
+        console.log(`  ${Fmt.gray}[ ѕᴛᴏʀᴀɢᴇ ᴇᴍᴘᴛʏ. ɴᴏ ᴀᴄᴄᴏᴜɴᴛѕ ʟɪɴᴋᴇᴅ ʏᴇᴛ ]${Fmt.reset}\n`);
     }
-    console.log("\n");
 }
 
 async function homeMenu(notification = false) {
@@ -107,8 +122,8 @@ async function homeMenu(notification = false) {
     displayHeader('ᴍᴀɪɴ ᴄᴏʀᴇ');
     if (notification) console.log(` ${Fmt.bgMagenta}${Fmt.white}${Fmt.bold} ᴀʟᴇʀᴛ ${Fmt.reset} ${Fmt.magenta}${notification}${Fmt.reset}\n`);
 
-    console.log(`  ${Fmt.magenta}1.│${Fmt.reset} ${Fmt.bold}ʀᴜɴ ᴍᴜʟᴛɪ-ᴀᴄᴄᴏᴜɴᴛ ᴀᴘɪ ᴘɪᴘᴇʟɪɴᴇ (ᴄᴏɴᴛɪɴᴜᴏᴜѕ ᴀᴜᴛᴏᴍᴀᴛᴇᴅ ʟᴏᴏᴘ)${Fmt.reset}`);
-    console.log(`  ${Fmt.magenta}2.│${Fmt.reset} ${Fmt.bold}ᴍᴀɴᴀɢᴇ ѕᴛᴇᴀᴍ ᴀᴄᴄᴏᴜɴᴛѕ ᴠᴀᴜʟᴛ ${Fmt.gray}(ᴀᴅᴅ/ᴇᴅɪᴛ/ᴅᴇʟᴇᴛᴇ ᴀᴄᴄᴏᴜɴᴛѕ)${Fmt.reset}`);
+    console.log(`  ${Fmt.magenta}1.│${Fmt.reset} ${Fmt.bold}ʀᴜɴ ᴍᴜʟᴛɪ-ᴀᴄᴄᴏᴜɴᴛ ᴀᴘɪ ᴘɪᴘᴇʟɪɴᴇ (ᴀᴜᴛᴏᴍᴀᴛᴇᴅ ᴄʏᴄʟᴇ)${Fmt.reset}`);
+    console.log(`  ${Fmt.magenta}2.│${Fmt.reset} ${Fmt.bold}ᴍᴀɴᴀɢᴇ ѕᴛᴇᴀᴍ ᴀᴄᴄᴏᴜɴᴛѕ ᴠᴀᴜʟᴛ ${Fmt.reset}`);
     console.log('\n  ' + Fmt.gray + 'ᴘʀᴇѕѕ ᴄᴛʀʟ + ᴄ ᴛᴏ ᴇхɪᴛ.' + Fmt.reset + '\n');
 
     const decision = await ask(`${Fmt.bold}${Fmt.magenta}>> ѕᴇʟᴇᴄᴛ ᴘᴀᴛʜ: ${Fmt.reset}`);
@@ -126,7 +141,7 @@ async function profilesMenu(notification = false) {
     try {
         const rows = await db_all('SELECT id, username, steamId, cookies, last_comment FROM steamprofiles');
         if (rows.length > 0) {
-            process.stdout.write(`  ${Fmt.dim}ᴠᴀʟɪᴅᴀᴛɪɴɢ ᴄᴏᴏᴋɪᴇѕ, ᴘʟᴇᴀѕᴇ ᴡᴀɪᴛ...${Fmt.reset}\r`);
+            process.stdout.write(`  ${Fmt.dim}ᴠᴀʟɪ查ᴅᴀᴛɪɴɢ ᴄᴏᴏᴋɪᴇѕ, ᴘʟᴇᴀѕᴇ ᴡᴀɪᴛ...${Fmt.reset}\r`);
             
             profilesWithStatus = await Promise.all(rows.map(async (row, i) => {
                 const tempCommunity = new SteamCommunity();
@@ -141,22 +156,7 @@ async function profilesMenu(notification = false) {
                 return { ...row, letterId: letter, displayLetter: est(letter), isValid };
             }));
 
-            console.log(`${Fmt.bold}${Fmt.magenta} ʀᴇɢɪѕᴛᴇʀᴇᴅ ᴀᴄᴄᴏᴜɴᴛѕ:                             ${Fmt.reset}`);
-            
-            console.log(`${Fmt.magenta}┌────┬────────┬──────────────────────┬────────────────────┬──────────────────────────┐${Fmt.reset}`);
-            console.log(`${Fmt.magenta}│ ɪᴅ │ ѕᴛᴀᴛᴜѕ │ ᴜѕᴇʀɴᴀᴍᴇ             │ ѕᴛᴇᴀᴍ ɪᴅ           │ ʟᴀѕᴛ ᴄᴏᴍᴍᴇɴᴛ             │${Fmt.reset}`);
-            console.log(`${Fmt.magenta}├────┼────────┼──────────────────────┼────────────────────┼──────────────────────────┤${Fmt.reset}`);
-            
-            profilesWithStatus.forEach(p => {
-                const idStr = pad(p.displayLetter, 2);
-                const statusIcon = p.isValid ? `${Fmt.green}   ✓    ${Fmt.magenta}` : `${Fmt.red}   х    ${Fmt.magenta}`;
-                const uName = pad(est(p.username || ''), 20);
-                const sId = pad((p.steamId || ''), 18);
-                const lComm = pad(est(p.last_comment || 'ɴᴜʟʟ'), 24);
-
-                console.log(`${Fmt.magenta}│ ${Fmt.cyan}${idStr} ${Fmt.magenta}│${statusIcon}│ ${Fmt.white}${uName} ${Fmt.magenta}│ ${Fmt.gray}${sId} ${Fmt.magenta}│ ${Fmt.dim}${lComm} ${Fmt.magenta}│${Fmt.reset}`);
-            });
-            console.log(`${Fmt.magenta}└────┴────────┴──────────────────────┴────────────────────┴──────────────────────────┘${Fmt.reset}\n`);
+            printAccountsTable(profilesWithStatus);
         } else {
             console.log(`  ${Fmt.gray}[ ѕᴛᴏʀᴀɢᴇ ᴇᴍᴘᴛʏ. ɴᴏ ᴀᴄᴄᴏᴜɴᴛѕ ʟɪɴᴋᴇᴅ ʏᴇᴛ ]${Fmt.reset}\n`);
         }
@@ -164,12 +164,16 @@ async function profilesMenu(notification = false) {
         console.log(`  ${Fmt.red}❌ ᴇʀʀᴏʀ ʀᴇᴀᴅɪɴɢ ᴅᴀᴛᴀʙᴀѕᴇ.${Fmt.reset}`);
     }
 
+    console.log(`  ${Fmt.gray}0.│ ᴍᴀɪɴ ᴍᴇɴᴜ${Fmt.reset}`);
     console.log(`  ${Fmt.magenta}1.│${Fmt.reset} ʟɪɴᴋ ɴᴇᴡ ѕᴛᴇᴀᴍ ᴀᴄᴄᴏᴜɴᴛ ᴠɪᴀ ɪɴᴄᴏɢɴɪᴛᴏ ʙʀᴏᴡѕᴇʀ`);
     console.log(`  ${Fmt.magenta}2.│${Fmt.reset} ᴅᴇʟᴇᴛᴇ ᴀɴ ᴀᴄᴄᴏᴜɴᴛ ʀᴇᴄᴏʀᴅ`);
-    console.log(`  ${Fmt.gray}3.│ ʀᴏʟʟʙᴀᴄᴋ ᴛᴏ ᴍᴀɪɴ ᴍᴇɴᴜ${Fmt.reset}\n`);
+    console.log(`  ${Fmt.magenta}3.│${Fmt.reset} ᴜɴʟᴏᴄᴋ ᴀ ʀᴇѕᴛʀɪᴄᴛᴇᴅ ᴀᴄᴄᴏᴜɴᴛ`);
+    console.log(`  ${Fmt.magenta}4.│${Fmt.reset} ᴛᴏɢɢʟᴇ ᴅᴇʙᴜɢ ᴍᴏᴅᴇ [${debugMode ? Fmt.green + 'ᴇɴᴀʙʟᴇᴅ' : Fmt.red + 'ᴅɪѕᴀʙʟᴇᴅ'}${Fmt.reset}]\n`);
 
     const decision = await ask(`${Fmt.bold}${Fmt.magenta}>> ѕᴇʟᴇᴄᴛ ᴏᴘᴛɪᴏɴ (ᴏʀ ᴛʏᴘᴇ ɪᴅ ʟᴇᴛᴛᴇʀ ᴛᴏ ʀᴇɴᴇᴡ ʙʀᴏᴋᴇɴ ᴄᴏᴏᴋɪᴇ): ${Fmt.reset}`);
     
+    if (decision === '0') return homeMenu();
+
     const selectedProfile = profilesWithStatus.find(p => p.letterId === decision.toLowerCase());
     if (selectedProfile) {
         if (!selectedProfile.isValid) {
@@ -181,19 +185,52 @@ async function profilesMenu(notification = false) {
     }
 
     if (decision === '1') return addAccountViaBrowserWindow();
-    if (decision === '2') return removeSteamAccount();
-    if (decision === '3') return homeMenu();
+    if (decision === '2') return removeSteamAccount(profilesWithStatus);
+    if (decision === '3') return unlockSteamAccount(profilesWithStatus);
+    if (decision === '4') {
+        debugMode = !debugMode;
+        return profilesMenu(`ᴅᴇʙᴜɢ ᴍᴏᴅᴇ ѕᴇᴛ ᴛᴏ ${debugMode ? 'ᴇɴᴀʙʟᴇᴅ' : 'ᴅɪѕᴀʙʟᴇᴅ'}.`);
+    }
     profilesMenu();
+}
+
+async function unlockSteamAccount(profiles) {
+    displayHeader('ᴜɴʟᴏᴄᴋ ᴀᴄᴄᴏᴜɴᴛѕ');
+    if (profiles.length === 0) return profilesMenu('ɴᴏ ᴀᴄᴄᴏᴜɴᴛѕ ʟᴏᴀᴅᴇᴅ ᴛᴏ ᴜɴʟᴏᴄᴋ.');
+    
+    printAccountsTable(profiles);
+
+    console.log(`  ${Fmt.gray}0.│ ᴍᴀɪɴ ᴍᴇɴᴜ${Fmt.reset}\n`);
+
+    const selection = await ask(`${Fmt.bold}${Fmt.magenta}>> ᴇɴᴛᴇʀ ᴀᴄᴄᴏᴜɴᴛ ɪᴅ ʟᴇᴛᴛᴇʀ ᴛᴏ ᴜɴʟᴏᴄᴋ ᴏʀ 0 ꜰᴏʀ ᴍᴀɪɴ ᴍᴇɴᴜ: ${Fmt.reset}`);
+    if (selection === '0') return homeMenu();
+
+    const target = profiles.find(p => p.letterId === selection.toLowerCase());
+    if (target) {
+        db.run(`DELETE FROM account_locks WHERE steamId = ?`, [target.steamId], (err) => {
+            if (err) return profilesMenu('ᴇʀʀᴏʀ ᴄʟᴇᴀʀɪɴɢ ʀᴇѕᴛʀɪᴄᴛɪᴏɴ.');
+            profilesMenu(`ᴀᴄᴄᴏᴜɴᴛ [${est(target.username)}] ɪѕ ɴᴏᴡ ᴜɴʟᴏᴄᴋᴇᴅ.`);
+        });
+    } else {
+        profilesMenu('ɪᴅ ɴᴏᴛ ᴅᴇᴛᴇᴄᴛᴇᴅ.');
+    }
 }
 
 async function addAccountViaBrowserWindow() {
     displayHeader('ʟɪɴᴋ ᴀᴄᴄᴏᴜɴᴛ ᴠɪᴀ ʙʀᴏᴡѕᴇʀ');
     renderBox("ᴍᴜʟᴛɪ-ᴀᴄᴄᴏᴜɴᴛ ʀᴇɢɪѕᴛʀᴀᴛɪᴏɴ", 
         "1. ᴀ ᴘᴜʀᴇ ʙʀᴏᴡѕᴇʀ ᴡɪɴᴅᴏᴡ ᴡɪʟʟ ᴏᴘᴇɴ ɪɴ ɪɴᴄᴏɢɴɪᴛᴏ ᴍᴏᴅᴇ.\n" +
-        "2. ʟᴏɢ ɪɴᴛᴏ ᴛʜᴇ ѕᴛᴇᴀᴍ ᴀᴄᴄᴏᴜɴᴛ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ѕᴀᴠᴇ (ᴜѕᴇʀ/ᴘᴀѕѕ/ѕᴛᴇᴀᴍɢᴜᴀʀᴅ/ǫʀ).\n" +
+        "2. ʟᴏɢ ɪɴᴛᴏ ᴛʜᴇ ѕᴛᴇᴀᴍ ᴀᴄᴄᴏᴜɴᴛ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ѕᴀᴠᴇ.\n" +
         "3. ʟᴏɢɪɴ ᴄᴏᴍᴘʟᴇᴛᴇ, ᴅᴀᴛᴀ ѕᴀᴠᴇᴅ ᴀᴜᴛᴏᴍᴀᴛɪᴄᴀʟʟʏ.", 
         Fmt.magenta
     );
+
+    console.log(`  ${Fmt.gray}0.│ ᴍᴀɪɴ ᴍᴇɴᴜ${Fmt.reset}`);
+    console.log(`  ${Fmt.magenta}1.│${Fmt.reset} ʟᴀᴜɴᴄʜ ᴀᴜᴛʜᴇɴᴛɪᴄᴀᴛɪᴏɴ ʙʀᴏᴡѕᴇʀ\n`);
+
+    const choice = await ask(`${Fmt.bold}${Fmt.magenta}>> ѕᴇʟᴇᴄᴛ ᴀᴄᴛɪᴏɴ: ${Fmt.reset}`);
+    if (choice === '0') return homeMenu();
+    if (choice !== '1') return addAccountViaBrowserWindow();
 
     console.log(`\n${Fmt.dim}ʟᴀᴜɴᴄʜɪɴɢ ᴛᴇᴍᴘᴏʀᴀʀʏ ᴀᴜᴛʜᴇɴᴛɪᴄᴀᴛɪᴏɴ ʙʀᴏᴡѕᴇʀ ɪɴѕᴛᴀɴᴄᴇ...${Fmt.reset}\n`);
 
@@ -273,10 +310,22 @@ async function addAccountViaBrowserWindow() {
     }
 }
 
-async function removeSteamAccount() {
-    const accountTarget = await ask(`🗑️ ` + Fmt.bold + `ᴇɴᴛᴇʀ ᴜѕᴇʀɴᴀᴍᴇ ᴏʀ ѕᴛᴇᴀᴍ ɪᴅ ᴛᴏ ᴅᴇʟᴇᴛᴇ: ` + Fmt.reset);
-    db.run(`DELETE FROM steamprofiles WHERE steamId = ? OR username = ?`, [accountTarget, accountTarget], () => {
-        db.run(`DELETE FROM account_locks WHERE steamId = ?`, [accountTarget], () => {
+async function removeSteamAccount(profiles) {
+    displayHeader('ᴅᴇʟᴇᴛᴇ ᴀᴄᴄᴏᴜɴᴛ ʀᴇᴄᴏʀᴅ');
+    if (profiles.length === 0) return profilesMenu('ɴᴏ ᴀᴄᴄᴏᴜɴᴛѕ ʟᴏᴀᴅᴇᴅ ᴛᴏ ᴅᴇʟᴇᴛᴇ.');
+
+    printAccountsTable(profiles);
+
+    console.log(`  ${Fmt.gray}0.│ ᴍᴀɪɴ ᴍᴇɴᴜ${Fmt.reset}\n`);
+
+    const accountTarget = await ask(`🗑️ ${Fmt.bold}ᴇɴᴛᴇʀ ᴜѕᴇʀɴᴀᴍᴇ, ѕᴛᴇᴀᴍ ɪᴅ ᴏʀ 0 ꜰᴏʀ ᴍᴀɪɴ ᴍᴇɴᴜ: ${Fmt.reset}`);
+    if (accountTarget === '0') return homeMenu();
+
+    const target = profiles.find(p => p.letterId === accountTarget.toLowerCase() || p.username.toLowerCase() === accountTarget.toLowerCase() || p.steamId === accountTarget);
+    const queryId = target ? target.steamId : accountTarget;
+
+    db.run(`DELETE FROM steamprofiles WHERE steamId = ? OR username = ?`, [queryId, queryId], () => {
+        db.run(`DELETE FROM account_locks WHERE steamId = ?`, [queryId], () => {
             profilesMenu('ᴀᴄᴄᴏᴜɴᴛ ʀᴇᴍᴏᴠᴇᴅ ᴄʟᴇᴀɴʟʏ.');
         });
     });
@@ -291,18 +340,9 @@ function db_all(query, params = []) {
     });
 }
 
-function db_run(query, params = []) {
-    return new Promise((resolve, reject) => {
-        db.run(query, params, function(err) {
-            if (err) return reject(err);
-            resolve(this);
-        });
-    });
-}
-
 // --- AUTOMATIC INCOGNITO COOKIE RENEWAL SYSTEM ---
 async function renewAccountCookies(steamAccount) {
-    renderBox("ᴄᴏᴏᴋɪᴇ ᴀᴜᴛᴏ-ʀᴇɴᴇᴡᴀʟ ᴘɪᴘᴇʟɪɴᴇ", `ᴛᴀʀɢᴇᴛ ᴜѕᴇʀ: ${steamAccount.username}\nᴘʟᴇᴀѕᴇ ʟᴏɢ ɪɴ ᴛᴏ ᴛʜɪѕ ᴇхᴀᴄᴛ ᴀᴄᴄᴏᴜɴᴛ ɪɴ ᴛʜᴇ ʙʀᴏᴡѕᴇʀ...`, Fmt.magenta);
+    renderBox("ᴄᴏᴏᴋɪᴇ ᴀᴜᴛᴏ-ʀᴇɴᴇᴡᴀʟ ᴘɪᴘᴇʟɪɴᴇ", `ᴛᴀʀɢᴇᴛ ᴜѕᴇʀ: ${est(steamAccount.username)}\nᴘʟᴇᴀѕᴇ ʟᴏɢ ɪɴ ᴛᴏ ᴛʜɪѕ ᴇхᴀᴄᴛ ᴀᴄᴄᴏᴜɴᴛ ɪɴ ᴛʜᴇ ʙʀᴏᴡѕᴇʀ...`, Fmt.magenta);
     
     try {
         const browser = await puppeteer.launch({
@@ -332,7 +372,7 @@ async function renewAccountCookies(steamAccount) {
                     }
 
                     if (currentSteamId && currentSteamId !== steamAccount.steamId) {
-                        console.log(`\n  ${Fmt.red}⚠️ [ᴍɪѕᴍᴀᴛᴄʜ] ʏᴏᴜ ʟᴏɢɢᴇᴅ ɪɴᴛᴏ ᴛʜᴇ ᴡʀᴏɴɢ ᴀᴄᴄᴏᴜɴᴛ! (${currentSteamId}). ᴘʟᴇᴀѕᴇ ᴜѕᴇ -> ${steamAccount.username}${Fmt.reset}`);
+                        console.log(`\n  ${Fmt.red}⚠️ [ᴍɪѕᴍᴀᴛᴄʜ] ʏᴏᴜ ʟᴏɢɢᴇdz ɪɴᴛᴏ ᴛʜᴇ ᴡʀᴏɴɢ ᴀᴄᴄᴏᴜɴᴛ! (${currentSteamId}). ᴘʟᴇᴀѕᴇ ᴜѕᴇ -> ${est(steamAccount.username)}${Fmt.reset}`);
                         await new Promise(r => setTimeout(r, 3000));
                         continue;
                     }
@@ -350,8 +390,8 @@ async function renewAccountCookies(steamAccount) {
         await browser.close();
 
         if (loggedIn) {
-            await db_run(`UPDATE steamprofiles SET cookies = ? WHERE steamId = ?`, [JSON.stringify(cookies), steamAccount.steamId]);
-            console.log(`\n  ${Fmt.green}✓ [ᴠᴀʟɪᴅᴀᴛᴇᴅ] ᴄᴏᴏᴋɪᴇѕ ᴜᴘᴅᴀᴛᴇᴅ ɪɴ ѕᴛᴏʀᴀɢᴇ ᴛᴀʀɢᴇᴛɪɴɢ: ${steamAccount.username}${Fmt.reset}\n`);
+            db.run(`UPDATE steamprofiles SET cookies = ? WHERE steamId = ?`, [JSON.stringify(cookies), steamAccount.steamId]);
+            console.log(`\n  ${Fmt.green}✓ [ᴠᴀʟɪ點ᴅᴇᴅ] ᴄᴏᴏᴋɪᴇѕ ᴜᴘᴅᴀᴛᴇᴅ ɪɴ ѕᴛᴏʀᴀɢᴇ ᴛᴀʀɢᴇᴛɪɴɢ: ${est(steamAccount.username)}${Fmt.reset}\n`);
             return cookies;
         }
         return null;
@@ -361,182 +401,185 @@ async function renewAccountCookies(steamAccount) {
     }
 }
 
-// --- ENGINE PIPELINE SEAMLESS FLUID LOOP WITH MEMORY LOCKS ---
+// --- ENGINE PIPELINE SYSTEM (EXECUTIVE RUN CYCLE) ---
 async function autoRunMultiAPI() {
-    while (true) {
-        try {
-            displayHeader('ᴘᴜʀᴇ ᴀᴘɪ ᴘɪᴘᴇʟɪɴᴇ ᴘʀᴏᴄᴇѕѕɪɴɢ');
-            
-            console.log(`${Fmt.gray}[ᴀᴘɪ] ᴅᴏᴡɴʟᴏᴀᴅɪɴɢ ʟɪɴᴋѕ ᴠɪᴀ ʀᴇᴘ4ʀᴇᴘ ѕᴇʀᴠᴇʀѕ...${Fmt.reset}`);
-            const response = await fetch(`https://rep4rep.com/pub-api/user/steamprofiles?apiToken=${config.apiToken}`);
-            const data = await response.json();
-            
-            if (data.error) {
-                console.log(`${Fmt.red}[ᴀᴘɪ ᴇʀʀᴏʀ] ѕᴇʀᴠᴇʀ ʀᴇѕᴘᴏɴѕᴇ ᴅʀᴏᴘᴘᴇᴅ: ${data.error}${Fmt.reset}`);
-                await new Promise(r => setTimeout(r, 15000));
+    try {
+        displayHeader('ᴘᴜʀᴇ ᴀᴘɪ ᴘɪᴘᴇʟɪɴᴇ ᴘʀᴏᴄᴇѕѕɪɴɢ');
+        
+        if (debugMode) console.log(`${Fmt.gray}[ᴀᴘɪ] ᴅᴏᴡɴʟᴏᴀᴅɪɴɢ ʟɪɴᴋѕ ᴠɪᴀ ʀᴇᴘ4ʀᴇᴘ ѕᴇʀᴠᴇʀѕ...${Fmt.reset}`);
+        const response = await fetch(`https://rep4rep.com/pub-api/user/steamprofiles?apiToken=${config.apiToken}`);
+        const data = await response.json();
+        
+        if (data.error) {
+            console.log(`${Fmt.red}[ᴀᴘɪ ᴇʀʀᴏʀ] ѕᴇʀᴠᴇʀ ʀᴇѕᴘᴏɴѕᴇ ᴅʀᴏᴘᴘᴇᴅ: ${data.error}${Fmt.reset}`);
+            await new Promise(r => setTimeout(r, 5000));
+            return homeMenu();
+        }
+
+        let repSteamProfiles = [];
+        let repSteamProfilesObj = {};
+        data.forEach((p) => {
+            repSteamProfiles.push(p.steamId);
+            repSteamProfilesObj[p.steamId] = p.id; 
+        });
+
+        const steamProfiles = await db_all('SELECT id, username, steamId, cookies, token FROM steamprofiles');
+        process.stdout.write(`\x1b]0;ʀᴇᴘ х ʀᴇᴘ ᴀᴘɪ │ ${steamProfiles.length} ᴀᴄᴄᴏᴜɴᴛ ʟᴏᴀᴅᴇᴅ\x07`);
+
+        if (steamProfiles.length === 0) {
+            console.log(`${Fmt.yellow}[ᴡᴀʀɴɪɴɢ] ʟᴏᴄᴀʟ ᴠᴀᴜʟᴛ ѕᴛᴏʀᴀɢᴇ ʜᴏʟᴅѕ 0 ᴀᴄᴄᴏᴜɴᴛѕ. ѕᴛᴏᴘ ᴘɪᴘᴇʟɪɴᴇ.${Fmt.reset}`);
+            await new Promise(r => setTimeout(r, 5000));
+            return homeMenu();
+        }
+
+        const currentLocks = await db_all('SELECT steamId, lock_until FROM account_locks');
+        const locksMap = {};
+        currentLocks.forEach(l => { locksMap[l.steamId] = new Date(l.lock_until).getTime(); });
+
+        let totalTasksProcessedInCycle = 0;
+        let activeAvailableAccountsCount = 0;
+        let nearestUnlockTime = Infinity;
+
+        for (const steamProfile of steamProfiles) {
+            const lockTime = locksMap[steamProfile.steamId] || 0;
+            const nowTime = Date.now();
+
+            if (lockTime > nowTime) {
+                const remainingSeconds = Math.ceil((lockTime - nowTime) / 1000);
+                if (lockTime < nearestUnlockTime) nearestUnlockTime = lockTime;
+                
+                const remainingHours = (remainingSeconds / 3600).toFixed(1);
+                console.log(`  ${Fmt.red}ʟᴏᴄᴋᴇᴅ [${est(steamProfile.username)}] ${remainingHours} ʜ.${Fmt.reset}`);
                 continue;
             }
 
-            let repSteamProfiles = [];
-            let repSteamProfilesObj = {};
-            data.forEach((p) => {
-                repSteamProfiles.push(p.steamId);
-                repSteamProfilesObj[p.steamId] = p.id; 
-            });
+            activeAvailableAccountsCount++;
 
-            const steamProfiles = await db_all('SELECT id, username, steamId, cookies, token FROM steamprofiles');
-            
-            process.stdout.write(`\x1b]0;ʀᴇᴘ х ʀᴇᴘ ᴀᴘɪ │ ${steamProfiles.length} ᴀᴄᴄᴏᴜɴᴛ ʟᴏᴀᴅᴇᴅ\x07`);
-
-            if (steamProfiles.length === 0) {
-                console.log(`${Fmt.yellow}[ᴡᴀʀɴɪɴɢ] ʟᴏᴄᴀʟ ᴠᴀᴜʟᴛ ѕᴛᴏʀᴀɢᴇ ʜᴏʟᴅѕ 0 ᴀᴄᴄᴏᴜɴᴛѕ. ѕᴛᴏᴘ ᴘɪᴘᴇʟɪɴᴇ.${Fmt.reset}`);
-                await ask(`\nᴘʀᴇѕѕ ᴇɴᴛᴇʀ ᴛᴏ ʀᴇᴛᴜʀɴ ᴛᴏ ᴍᴀɪɴ ᴅᴀѕʜʙᴏᴀʀᴅ ᴍᴇɴᴜ...`);
-                return homeMenu();
-            }
-
-            const currentLocks = await db_all('SELECT steamId, lock_until FROM account_locks');
-            const locksMap = {};
-            currentLocks.forEach(l => { locksMap[l.steamId] = new Date(l.lock_until).getTime(); });
-
-            let totalTasksProcessedInCycle = 0;
-            let activeAvailableAccountsCount = 0;
-            let nearestUnlockTime = Infinity;
-
-            for (const steamProfile of steamProfiles) {
-                const lockTime = locksMap[steamProfile.steamId] || 0;
-                const nowTime = Date.now();
-
-                if (lockTime > nowTime) {
-                    const remainingSeconds = Math.ceil((lockTime - nowTime) / 1000);
-                    if (lockTime < nearestUnlockTime) nearestUnlockTime = lockTime;
-                    console.log(`  ${Fmt.red}ʟᴏᴄᴋᴇᴅ [${steamProfile.username}] ${Math.ceil(remainingSeconds / 60)} ᴍɪɴѕ.${Fmt.reset}`);
-                    continue;
+            try {
+                if (!repSteamProfiles.includes(steamProfile.steamId)) {
+                    if (debugMode) console.log(`[ᴀᴘɪ] ʀᴇɢɪѕᴛᴇʀɪɴɢ ᴀᴄᴄᴏᴜɴᴛ ɪᴅᴇɴᴛɪᴛʏ: ${est(steamProfile.username)}...`);
+                    const bodyParams = new URLSearchParams({ apiToken: config.apiToken, steamProfile: steamProfile.steamId });
+                    await fetch('https://rep4rep.com/pub-api/user/steamprofiles/add', { method: 'POST', body: bodyParams });
+                    
+                    const refRes = await fetch(`https://rep4rep.com/pub-api/user/steamprofiles?apiToken=${config.apiToken}`);
+                    const refData = await refRes.json();
+                    if (!refData.error) {
+                        refData.forEach(p => {
+                            if (!repSteamProfiles.includes(p.steamId)) repSteamProfiles.push(p.steamId);
+                            repSteamProfilesObj[p.steamId] = p.id;
+                        });
+                    }
                 }
 
-                activeAvailableAccountsCount++;
+                renderBox("ᴀᴄᴛɪᴠᴇ ѕᴛʀᴇᴀᴍ ᴛᴀʀɢᴇᴛ", `ᴘʀᴏᴄᴇѕѕɪɴɢ ᴀᴘɪ ʟᴏᴏᴘѕ ᴏɴ ᴀᴄᴄᴏᴜɴᴛ: ${est(steamProfile.username)}`, Fmt.magenta);
+                
+                let currentCookiesString = steamProfile.cookies;
+                community.setCookies(JSON.parse(currentCookiesString));
+                
+                let loggedIn = await new Promise((r) => community.loggedIn((err, li) => r(!err && li)));
+                
+                if (!loggedIn) {
+                    console.log(`  ${Fmt.red}❌ ѕᴇѕѕɪᴏɴ <b>ᴄᴏᴏᴋɪᴇѕ</b> ᴇхᴘɪʀᴇᴅ ᴏɴ ${est(steamProfile.username)}. ɪɴɪᴛɪᴀᴛɪɴɢ ᴀᴜᴛᴏ-ʀᴇʙᴏᴏᴛ...${Fmt.reset}\n`);
+                    // FIXED BUG: Changed steamAccount to steamProfile below to avoid runtime reference crashes
+                    const renewedCookies = await renewAccountCookies(steamProfile);
+                    if (renewedCookies) {
+                        community.setCookies(renewedCookies);
+                        loggedIn = true; 
+                    } else {
+                        continue;
+                    }
+                }
 
-                try {
-                    if (!repSteamProfiles.includes(steamProfile.steamId)) {
-                        console.log(`[ᴀᴘɪ] ʀᴇɢɪѕᴛᴇʀɪɴɢ ᴀᴄᴄᴏᴜɴᴛ ɪᴅᴇɴᴛɪᴛʏ: ${steamProfile.username} ᴏɴ ʀᴇᴘ4ʀᴇᴘ ᴅᴀѕʜʙᴏᴀʀᴅ...`);
-                        const bodyParams = new URLSearchParams({ apiToken: config.apiToken, steamProfile: steamProfile.steamId });
-                        await fetch('https://rep4rep.com/pub-api/user/steamprofiles/add', { method: 'POST', body: bodyParams });
+                let keepUsingAccount = true;
+
+                while (keepUsingAccount) {
+                    const tasksRes = await fetch(`https://rep4rep.com/pub-api/tasks?apiToken=${config.apiToken}&steamProfile=${repSteamProfilesObj[steamProfile.steamId]}`);
+                    const tasks = await tasksRes.json();
+                    
+                    if (tasks.error || tasks.length === 0) {
+                        if (debugMode) console.log(`  ${Fmt.gray}[ѕᴄᴀɴɴᴇʀ] ɴᴏ ᴍᴏʀᴇ ᴛᴀѕᴋѕ ᴀᴠᴀɪʟᴀʙʟᴇ ᴏɴ ᴀᴄᴄᴏᴜɴᴛ: ${est(steamProfile.username)}.${Fmt.reset}\n`);
+                        keepUsingAccount = false;
+                        break;
+                    }
+
+                    const currentBatch = tasks.slice(0, 3);
+                    if (debugMode) console.log(`${Fmt.gray}  ↳ ǫᴜᴇᴜᴇᴅ ʙᴀᴛᴄʜ ѕᴜʙѕᴇᴛ: [${currentBatch.length}/3] ᴏᴘᴇʀᴀᴛɪᴏɴѕ ᴍᴀᴘᴘᴇᴅ.${Fmt.reset}\n`);
+
+                    let accountRateLimited = false;
+
+                    for (const task of currentBatch) {
+                        if (debugMode) {
+                            console.log(`  ${Fmt.gray}-> ᴘᴜѕʜɪɴɢ ᴄᴏᴍᴍᴇɴᴛ ᴘᴀʏʟᴏᴀᴅ:${Fmt.reset} ʜᴇᴀᴅɪɴɢ ᴛᴀʀɢᴇᴛ -> ${task.targetSteamProfileName}`);
+                        }
                         
-                        const refRes = await fetch(`https://rep4rep.com/pub-api/user/steamprofiles?apiToken=${config.apiToken}`);
-                        const refData = await refRes.json();
-                        if (!refData.error) {
-                            refData.forEach(p => {
-                                if (!repSteamProfiles.includes(p.steamId)) repSteamProfiles.push(p.steamId);
-                                repSteamProfilesObj[p.steamId] = p.id;
+                        try {
+                            await new Promise((res, rejectSession) => {
+                                community.postUserComment(task.targetSteamProfileId, task.requiredCommentText, (e) => {
+                                    if (e) return rejectSession(e);
+                                    res();
+                                });
                             });
-                        }
-                    }
 
-                    renderBox("ᴀᴄᴛɪᴠᴇ ѕᴛʀᴇᴀᴍ ᴛᴀʀɢᴇᴛ", `ᴘʀᴏᴄᴇѕѕɪɴɢ ᴀᴘɪ ʟᴏᴏᴘѕ ᴏɴ ᴀᴄᴄᴏᴜɴᴛ: ${steamProfile.username}`, Fmt.magenta);
-                    
-                    let currentCookiesString = steamProfile.cookies;
-                    community.setCookies(JSON.parse(currentCookiesString));
-                    
-                    let loggedIn = await new Promise((r) => community.loggedIn((err, li) => r(!err && li)));
-                    
-                    if (!loggedIn) {
-                        console.log(`  ${Fmt.red}❌ ѕᴇѕѕɪᴏɴ ᴄᴏᴏᴋɪᴇѕ ᴇхᴘɪʀᴇᴅ ᴏɴ ${steamProfile.username}. ɪɴɪᴛɪᴀᴛɪɴɢ ᴀᴜᴛᴏ-ʀᴇʙᴏᴏᴛ ѕᴇǫᴜᴇɴᴄᴇ...${Fmt.reset}\n`);
-                        
-                        const renewedCookies = await renewAccountCookies(steamProfile);
-                        if (renewedCookies) {
-                            community.setCookies(renewedCookies);
-                            loggedIn = true; 
-                        } else {
-                            console.log(`  ${Fmt.yellow}⏭️ ѕᴋɪᴘᴘɪɴɢ ${steamProfile.username} ᴅᴜᴇ ᴛᴏ ᴄᴏᴏᴋɪᴇ ʀᴇɴᴇᴡ ѕᴇѕѕɪᴏɴ ᴇʀʀᴏʀ.${Fmt.reset}\n`);
-                            continue;
-                        }
-                    }
-
-                    let keepUsingAccount = true;
-
-                    while (keepUsingAccount) {
-                        const tasksRes = await fetch(`https://rep4rep.com/pub-api/tasks?apiToken=${config.apiToken}&steamProfile=${repSteamProfilesObj[steamProfile.steamId]}`);
-                        const tasks = await tasksRes.json();
-                        
-                        if (tasks.error || tasks.length === 0) {
-                            console.log(`  ${Fmt.gray}[ѕᴄᴀɴɴᴇʀ] ɴᴏ ᴍᴏʀᴇ ᴛᴀѕᴋѕ ᴀᴠᴀɪʟᴀʙʟᴇ ᴏɴ ᴀᴄᴄᴏᴜɴᴛ: ${steamProfile.username}. ᴍᴏᴠɪɴɢ ᴛᴏ ɴᴇхᴛ ɴᴏᴅᴇ...${Fmt.reset}\n`);
-                            keepUsingAccount = false;
-                            break;
-                        }
-
-                        const currentBatch = tasks.slice(0, 3);
-                        console.log(`${Fmt.gray}  ↳ ǫᴜᴇᴜᴇᴅ ʙᴀᴛᴄʜ ѕᴜʙѕᴇᴛ: [${currentBatch.length}/3] ᴏᴘᴇʀᴀᴛɪᴏɴѕ ᴍᴀᴘᴘᴇᴅ.${Fmt.reset}\n`);
-
-                        let accountRateLimited = false;
-
-                        for (const task of currentBatch) {
-                            console.log(`  ${Fmt.gray}-> ᴘᴜѕʜɪɴɢ ᴄᴏᴍᴍᴇɴᴛ ᴘᴀʏʟᴏᴀᴅ:${Fmt.reset} ʜᴇᴀᴅɪɴɢ ᴛᴏ ᴛᴀʀɢᴇᴛ -> ${task.targetSteamProfileName}`);
+                            const completeParams = new URLSearchParams({
+                                apiToken: config.apiToken, taskId: task.taskId,
+                                commentId: task.requiredCommentId, authorSteamProfileId: repSteamProfilesObj[steamProfile.steamId]
+                            });
                             
-                            try {
-                                await new Promise((res, rejectSession) => {
-                                    community.postUserComment(task.targetSteamProfileId, task.requiredCommentText, (e) => {
-                                        if (e) return rejectSession(e);
-                                        res();
-                                    });
-                                });
+                            const r4rRes = await fetch('https://rep4rep.com/pub-api/tasks/complete', { method: 'POST', body: completeParams });
+                            const r4rData = await r4rRes.json();
 
-                                const completeParams = new URLSearchParams({
-                                    apiToken: config.apiToken, taskId: task.taskId,
-                                    commentId: task.requiredCommentId, authorSteamProfileId: repSteamProfilesObj[steamProfile.steamId]
-                                });
+                            if (r4rData.error) {
+                                if (debugMode) console.log(`     ${Fmt.bold}${Fmt.yellow}⚠️ [ʀ4ʀ ʀᴇᴊᴇᴄᴛɪᴏɴ] ${r4rData.error}${Fmt.reset}\n`);
+                            } else {
+                                if (debugMode) console.log(`     ${Fmt.bold}${Fmt.green}[ᴄᴏᴍᴘʟᴇᴛᴇᴅ] ᴄᴏᴍᴍᴇɴᴛ ѕʏɴᴄᴇᴅ ᴏɴ ʀᴇᴘ4ʀᴇᴘ.${Fmt.reset}\n`);
+                                totalTasksProcessedInCycle++;
                                 
-                                const r4rRes = await fetch('https://rep4rep.com/pub-api/tasks/complete', { method: 'POST', body: completeParams });
-                                const r4rData = await r4rRes.json();
-
-                                if (r4rData.error) {
-                                    console.log(`     ${Fmt.bold}${Fmt.yellow}⚠️ [ʀ4ʀ ʀᴇᴊᴇᴄᴛɪᴏɴ] ѕᴇʀᴠᴇʀ ᴅʀᴏᴘᴘᴇᴅ ᴠᴀʟɪᴅᴀᴛɪᴏɴ ʀᴇѕᴘᴏɴѕᴇ: ${r4rData.error}${Fmt.reset}\n`);
-                                } else {
-                                    console.log(`     ${Fmt.bold}${Fmt.green}[ᴄᴏᴍᴘʟᴇᴛᴇᴅ] (ᴛᴀʀɢᴇᴛ ɪᴅ: ${task.targetSteamProfileId}) ᴄᴏᴍᴍᴇɴᴛ ѕʏɴᴄᴇᴅ ᴏɴ ʀᴇᴘ4ʀᴇᴘ.${Fmt.reset}\n`);
-                                    totalTasksProcessedInCycle++;
-                                }
-
-                                await new Promise(r => setTimeout(r, 15000));
-
-                            } catch (steamError) {
-                                console.log(`     ${Fmt.bold}${Fmt.red}❌ [ѕᴛᴇᴀᴍ ᴄʀɪᴛɪᴄᴀʟ ʀᴇᴊᴇᴄᴛɪᴏɴ] ${steamError.message}${Fmt.reset}`);
-                                
-                                const lockExpiryISO = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-                                await db_run(`INSERT OR REPLACE INTO account_locks (steamId, lock_until) VALUES (?, ?)`, [steamProfile.steamId, lockExpiryISO]);
-                                
-                                console.log(`\n🚨 ${Fmt.bold}${Fmt.red}[ᴘʀᴏᴛᴇᴄᴛɪᴏɴ ᴀᴄᴛɪᴠᴇ] [${steamProfile.username}] ʟᴏᴄᴋᴇᴅ ᴇɴᴅʟᴇѕѕʟʏ ᴘᴇɴᴅɪɴɢ 1 ʜᴏᴜʀ. ѕᴋɪᴘ ᴛᴏ ɴᴇхᴛ...${Fmt.reset}\n`);
-                                
-                                accountRateLimited = true;
-                                keepUsingAccount = false; 
-                                break; 
+                                // NEW FIX: Now executing SQLite update directly so last_comment saves cleanly!
+                                db.run(`UPDATE steamprofiles SET last_comment = ? WHERE steamId = ?`, [task.requiredCommentText, steamProfile.steamId]);
                             }
-                        }
 
-                        if (!accountRateLimited && keepUsingAccount) {
-                            console.log(`\n${Fmt.bold}${Fmt.green}[⚡ ᴅɪʀᴇᴄᴛ ᴛʜʀᴇᴀᴅ] ʙᴀᴛᴄʜ ᴄᴏᴍᴘʟᴇᴛᴇᴅ ᴏɴ [${steamProfile.username}]. ᴄᴏɴᴛɪɴᴜɪɴɢ ᴇхᴇᴄᴜᴛɪᴏɴ ᴏɴ ᴛʜɪѕ ᴀᴄᴄᴏᴜɴᴛ...${Fmt.reset}\n`);
-                            await new Promise(r => setTimeout(r, 3000));
+                            await new Promise(r => setTimeout(r, 15000));
+
+                        } catch (steamError) {
+                            console.log(`     ${Fmt.bold}${Fmt.red}❌ [ѕᴛᴇᴀᴍ ᴄʀɪᴛɪᴄᴀʟ ʀᴇᴊᴇᴄᴛɪᴏɴ] ${steamError.message}${Fmt.reset}`);
+                            
+                            const lockExpiryISO = new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString();
+                            db.run(`INSERT OR REPLACE INTO account_locks (steamId, lock_until) VALUES (?, ?)`, [steamProfile.steamId, lockExpiryISO]);
+                            
+                            console.log(`\n🚨 ${Fmt.bold}${Fmt.red}[ᴘʀᴏᴛᴇᴄᴛɪᴏɴ ᴀᴄᴛɪᴠᴇ] [${est(steamProfile.username)}] ʟᴏᴄᴋᴇᴅ ꜰᴏʀ 12 ʜᴏᴜʀѕ.${Fmt.reset}\n`);
+                            
+                            accountRateLimited = true;
+                            keepUsingAccount = false; 
+                            break; 
                         }
                     }
 
-                } catch (profileException) {
-                    console.log(`  ${Fmt.red}❌ [ᴀᴄᴄᴏᴜɴᴛ ɪѕѕᴜᴇ] ɪѕᴏʟᴀᴛɪᴏɴ ʙʟᴏᴄᴋ ᴄᴀᴜɢʜᴛ ᴇʀʀᴏʀ ᴏɴ ${steamProfile.username}: ${profileException.message}${Fmt.reset}\n`);
+                    if (!accountRateLimited && keepUsingAccount) {
+                        if (debugMode) console.log(`\n${Fmt.bold}${Fmt.green}[⚡ ᴅɪʀᴇᴄᴛ ᴛʜʀᴇᴀᴅ] ʙᴀᴛᴄʜ ᴄᴏᴍᴘʟᴇᴛᴇᴅ.${Fmt.reset}\n`);
+                        await new Promise(r => setTimeout(r, 3000));
+                    }
                 }
-            }
-            
-            if (totalTasksProcessedInCycle > 0) {
-                await new Promise(r => setTimeout(r, 2000));
-            } 
-            else if (activeAvailableAccountsCount === 0 && nearestUnlockTime !== Infinity) {
-                console.log(`\n${Fmt.bold}${Fmt.red}[ᴀʟʟ ᴀᴄᴄᴏᴜɴᴛѕ ʟᴏᴄᴋᴇᴅ ᴏᴜᴛ] ᴇᴠᴇʀʏ ᴀᴄᴄᴏᴜɴᴛ ɪɴѕɪᴅᴇ ѕᴛᴏʀᴀɢᴇ ɪѕ ᴄᴜʀʀᴇɴᴛʟʏ ʀᴇѕᴛʀɪᴄᴛᴇᴅ.${Fmt.reset}`);
-                console.log(`\n${Fmt.magenta}🔄 ᴜᴘᴅᴀᴛɪɴɢ ʟᴏᴄᴋ ѕᴛᴀᴛᴜѕ ʟɪѕᴛ ɪɴ 60 ѕᴇᴄᴏɴᴅѕ...${Fmt.reset}`);
-                await new Promise(r => setTimeout(r, 60000));
-            } 
-            else {
-                console.log(`\n${Fmt.gray}[ɴᴏᴛᴇ] ᴀʟʟ ᴀᴄᴛɪᴠᴇ ǫᴜᴇᴜᴇѕ ᴀʀᴇ ᴇᴍᴘᴛʏ. ʀᴇѕᴛɪɴɢ 1 ᴍɪɴᴜᴛᴇ ᴘʀɪᴏʀ ᴛᴏ ᴄʜᴇᴄᴋɪɴɢ ʙᴀᴄᴋ...${Fmt.reset}`);
-                await countdown(60, "⏳ ǫᴜᴇᴜᴇ ᴇᴍᴘᴛʏ ᴄᴏᴏʟᴅᴏᴡɴ");
-            }
 
-        } catch (globalError) {
-            console.log(`${Fmt.red}[ᴄʀɪᴛɪᴄᴀʟ ᴄᴏʀᴇ ᴇхᴄᴇᴘᴛɪᴏɴ] ɪᴛᴇʀᴀᴛɪᴏɴ ʙʀᴇᴀᴋ: ${globalError.message}${Fmt.reset}`);
-            await new Promise(r => setTimeout(r, 10000));
+            } catch (profileException) {
+                console.log(`  ${Fmt.red}❌ [ᴀᴄᴄᴏᴜɴᴛ ɪѕѕᴜᴇ] ${profileException.message}${Fmt.reset}\n`);
+            }
         }
+        
+        if (activeAvailableAccountsCount === 0 && nearestUnlockTime !== Infinity) {
+            console.log(`\n${Fmt.bold}${Fmt.red}[ᴀʟʟ ᴀᴄᴄᴏᴜɴᴛѕ ʟᴏᴄᴋᴇᴅ ᴏᴜᴛ] ᴇᴠᴇʀʏ ᴀᴄᴄᴏᴜɴᴛ ɪɴѕɪᴅᴇ ѕᴛᴏʀᴀɢᴇ ɪѕ ᴄᴜʀʀᴇɴᴛʟʏ ʀᴇѕᴛʀɪᴄᴛᴇᴅ.${Fmt.reset}`);
+        } else if (totalTasksProcessedInCycle === 0) {
+            console.log(`\n${Fmt.gray}[ɴᴏᴛᴇ] ᴀʟʟ ᴀᴄᴛɪᴠᴇ ǫᴜᴇᴜᴇѕ ᴀʀᴇ ᴇᴍᴘᴛʏ.${Fmt.reset}`);
+        } else {
+            console.log(`\n${Fmt.green}✓ ᴘɪᴘᴇʟɪɴᴇ ᴄʏᴄʟᴇ ᴇхᴇᴄᴜᴛᴇᴅ ѕᴜᴄᴄᴇѕѕꜰᴜʟʟʏ.${Fmt.reset}`);
+        }
+
+        console.log(`\n${Fmt.magenta}🔄 ʀᴇᴛᴜʀɴɪɴɢ ᴛᴏ ᴍᴀɪɴ ᴍᴇɴᴜ ɪɴ 5 ѕᴇᴄᴏɴᴅѕ...${Fmt.reset}`);
+        await new Promise(r => setTimeout(r, 5000));
+        return homeMenu();
+
+    } catch (globalError) {
+        console.log(`${Fmt.red}[ᴄʀɪᴛɪᴄᴀʟ ᴄᴏʀᴇ ᴇхᴄᴇᴘᴛɪᴏɴ] ɪᴛᴇʀᴀᴛɪᴏɴ ʙʀᴇᴀᴋ: ${globalError.message}${Fmt.reset}`);
+        await new Promise(r => setTimeout(r, 5000));
+        return homeMenu();
     }
 }
