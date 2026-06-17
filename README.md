@@ -1,5 +1,5 @@
 # 🌌 rep4rep-api - Steam & Rep4Rep Pipeline
-[![GitHub repo](https://img.shields.io/badge/github-aritzbaraka90--tech-blue?style=for-the-badge&logo=github)](https://github.com/aritzbaraka90-tech)
+[![GitHub repo](https://img.shields.io/badge/github-BunnyHoper-blue?style=for-the-badge&logo=github)](https://github.com/BunnyHoper)
 [![Runtime](https://img.shields.io/badge/Runtime-Node.js%2020+-green?style=for-the-badge&logo=node.js)](https://nodejs.org)
 [![Version](https://img.shields.io/badge/ver-1.0.0-red?style=for-the-badge)](https://github.com/aritzbaraka90-tech)
 [![Donate](https://img.shields.io/badge/Support%20Me-paypal.me/AritzGonzalez7-yellowgreen?style=for-the-badge&logo=paypal)](https://paypal.me/AritzGonzalez7)
