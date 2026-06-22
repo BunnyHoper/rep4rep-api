@@ -8,13 +8,13 @@
 
 ---
 
-## ✨ Introduction: Effortless Reputation Scaling
+## ✨ ɪɴᴛʀᴏᴅᴜᴄᴛɪᴏɴ: ᴏᴘᴛɪᴍɪᴢᴇᴅ ᴛᴇʀᴍɪɴᴀʟ ᴅᴏᴡɴʟᴏᴀᴅѕ
 
 Stop manually managing comments and tasks (it's a waste of time). **rep4rep-api** is an automated engine designed to handle multiple Steam accounts simultaneously. It integrates directly with Rep4Rep services to maximize efficiency, handling posting, verification, and independent lockout management without manual input.
 
 ---
 
-## 🛠️ Core Capabilities
+## 🛠️ ᴄᴏʀᴇ ᴄᴀᴘᴀʙɪʟɪᴛɪᴇѕ
 
 *   **API-Driven Pipeline:** Fetches tasks directly from Rep4Rep and executes them via native Steam API calls.
 *   **Multi-Account Vault:** Safely stores session cookies for multiple Steam accounts in a local SQLite database.
@@ -23,7 +23,7 @@ Stop manually managing comments and tasks (it's a waste of time). **rep4rep-api*
 
 ---
 
-## 📂 Architecture & Files
+## 📂 ᴀʀᴄʜɪᴛᴇᴄᴛᴜʀᴇ -- ʀᴏᴏᴛ
 
 | Folder/File | Type | Action |
 | :--- | :---: | :--- |
@@ -33,7 +33,7 @@ Stop manually managing comments and tasks (it's a waste of time). **rep4rep-api*
 
 ---
 
-## ⚙️ Quick Start Guide
+## ⚙️ ǫᴜɪᴄᴋ ѕᴛᴀʀᴛ ɢᴜɪᴅᴇ
 
 1.  **Dependencies:** Ensure Node.js is installed.
     ```bash
@@ -51,7 +51,7 @@ Stop manually managing comments and tasks (it's a waste of time). **rep4rep-api*
 
 ---
 
-## 🤝 Contribution & Support
+## 🤝 ᴄᴏɴᴛʀɪʙᴜᴛɪᴏɴ ᴀɴᴅ ѕᴜᴘᴘᴏʀᴛ
 
 Contributions are welcome. If you encounter issues with API handling or account management:
 
@@ -62,9 +62,9 @@ Contributions are welcome. If you encounter issues with API handling or account 
 
 ---
 
-## 📜 License
+## 📜 ʟɪᴄᴇɴѕᴇ
 
-This project is released under the [MIT License](LICENSE).
+Feel free to do any u want with my scripts. God bless.
 
 ***
 *Built with ❤️ by Bunny.*
