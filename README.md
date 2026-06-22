@@ -1,4 +1,4 @@
-# 🌌 rep4rep-api - Steam & Rep4Rep Pipeline
+# 🌌 ʀᴇᴘ₄ʀᴇᴘ - ѕᴛᴇᴀᴍ ʀᴇᴀʟ ʙᴏᴛ ᴄᴏᴍᴍᴇɴᴛѕ
 [![GitHub repo](https://img.shields.io/badge/github-BunnyHoper-blue?style=for-the-badge&logo=github)](https://github.com/BunnyHoper)
 [![Runtime](https://img.shields.io/badge/Runtime-Node.js%2020+-green?style=for-the-badge&logo=node.js)](https://nodejs.org)
 [![Version](https://img.shields.io/badge/ver-1.0.0-red?style=for-the-badge)](https://github.com/aritzbaraka90-tech)
